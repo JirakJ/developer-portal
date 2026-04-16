@@ -1,18 +1,26 @@
-import { useState, useMemo } from 'react';
-import plugins, { categories, allTags } from '../data/plugins';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import plugins, { categories } from '../data/plugins';
 import PluginCard from '../components/PluginCard';
 
 export default function Catalog() {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(searchParams.get('category') || '');
   const [viewMode, setViewMode] = useState('grid');
+
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) setCategory(cat);
+  }, [searchParams]);
 
   const filtered = useMemo(() => {
     return plugins.filter(p => {
+      const q = search.toLowerCase();
       const matchSearch = !search ||
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.description.toLowerCase().includes(search.toLowerCase()) ||
-        p.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.tags.some(t => t.includes(q));
       const matchCategory = !category || p.category === category;
       return matchSearch && matchCategory;
     });

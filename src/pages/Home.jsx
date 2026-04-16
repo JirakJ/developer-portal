@@ -1,77 +1,92 @@
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 
+const categoryIcons = {
+  'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
+  'Git': '🔀', 'GPU': '🎮', 'Performance': '⏱️', 'Productivity': '✨',
+  'Quality': '✅', 'Security': '🔒', 'Testing': '🧪',
+};
+
 export default function Home() {
-  const totalPlugins = plugins.length;
-  const cats = categories;
+  const gpuCount = plugins.filter(p => p.category === 'GPU').length;
   const securityCount = plugins.filter(p => p.category === 'Security').length;
   const testingCount = plugins.filter(p => p.category === 'Testing').length;
+  const devopsCount = plugins.filter(p => p.category === 'DevOps').length;
+
+  const recentlyUpdated = useMemo(() =>
+    [...plugins].sort((a, b) => b.version.localeCompare(a.version)).slice(0, 8),
+  []);
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Welcome to the Developer Portal</h1>
-        <p>Your central hub for all JetBrains Marketplace plugins by Ing. Jakub Jirák</p>
+      <div className="home-hero">
+        <h1>JetBrains Plugin Suite</h1>
+        <p>Central hub for {plugins.length} plugins across {categories.length} categories — from GPU acceleration to security scanning.</p>
+        <div className="home-hero-actions">
+          <Link to="/catalog" className="btn-primary">Browse Catalog</Link>
+          <Link to="/docs" className="btn-secondary">Read Docs</Link>
+        </div>
       </div>
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-value">{totalPlugins}</div>
-          <div className="stat-label">Total Plugins</div>
+          <div className="stat-label">Plugins</div>
+          <div className="stat-value">{plugins.length}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{cats.length}</div>
-          <div className="stat-label">Categories</div>
-        </div>
-        <div className="stat-card">
+          <div className="stat-label">Security</div>
           <div className="stat-value">{securityCount}</div>
-          <div className="stat-label">Security Plugins</div>
         </div>
         <div className="stat-card">
+          <div className="stat-label">Testing</div>
           <div className="stat-value">{testingCount}</div>
-          <div className="stat-label">Testing Plugins</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">GPU / HPC</div>
+          <div className="stat-value">{gpuCount}</div>
         </div>
       </div>
 
       <div className="section">
-        <h2>🏷️ Plugins by Category</h2>
+        <h2>Categories</h2>
         <div className="category-grid">
-          {cats.map(cat => {
+          {categories.map(cat => {
             const count = plugins.filter(p => p.category === cat).length;
             return (
-              <div className="category-card" key={cat}>
-                <h3>{cat}</h3>
-                <p>{count} plugin{count !== 1 ? 's' : ''}</p>
-              </div>
+              <Link to={`/catalog?category=${encodeURIComponent(cat)}`} className="category-card" key={cat}>
+                <span className="category-icon">{categoryIcons[cat] || '📦'}</span>
+                <div>
+                  <h3>{cat}</h3>
+                  <p>{count} plugin{count !== 1 ? 's' : ''}</p>
+                </div>
+              </Link>
             );
           })}
         </div>
       </div>
 
       <div className="section">
-        <h2>🆕 Recently Updated</h2>
+        <div className="section-header">
+          <h2>Recently Updated</h2>
+          <Link to="/releases" className="section-link">View all →</Link>
+        </div>
         <table className="data-table">
           <thead>
             <tr>
               <th>Plugin</th>
               <th>Category</th>
               <th>Version</th>
-              <th>Pricing</th>
             </tr>
           </thead>
           <tbody>
-            {plugins
-              .slice()
-              .sort((a, b) => b.version.localeCompare(a.version))
-              .slice(0, 10)
-              .map(p => (
-                <tr key={p.slug}>
-                  <td><a href={`#/plugin/${p.slug}`}>{p.icon} {p.name}</a></td>
-                  <td>{p.category}</td>
-                  <td>{p.version}</td>
-                  <td><span className="badge badge-pricing">{p.pricing}</span></td>
-                </tr>
-              ))
-            }
+            {recentlyUpdated.map(p => (
+              <tr key={p.slug}>
+                <td><Link to={`/plugin/${p.slug}`}>{p.icon} {p.name}</Link></td>
+                <td><span className="badge">{p.category}</span></td>
+                <td><code>{p.version}</code></td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
