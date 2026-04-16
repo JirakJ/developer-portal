@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useToast } from '../contexts/ToastContext';
 import { removeItem, getItem, setItem } from '../utils/storage';
+import Breadcrumb from '../components/Breadcrumb';
 
 const themeOptions = [
   { value: 'dark', label: 'Dark', icon: '🌙', desc: 'Dark background with light text' },
@@ -49,6 +50,7 @@ export default function Settings() {
 
   return (
     <div className="page">
+      <Breadcrumb current="Settings" />
       <div className="page-header">
         <h1>⚙️ Settings</h1>
         <p>Manage your portal preferences</p>

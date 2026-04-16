@@ -1,6 +1,9 @@
+import Breadcrumb from '../components/Breadcrumb';
+
 export default function Docs() {
   return (
     <div className="page">
+      <Breadcrumb current="Documentation" />
       <div className="page-header">
         <h1>📖 Documentation</h1>
         <p>Guides, tutorials, and reference documentation for all plugins</p>

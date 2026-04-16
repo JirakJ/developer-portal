@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import PluginCard from '../components/PluginCard';
+import Breadcrumb from '../components/Breadcrumb';
 import { getItem, setItem } from '../utils/storage';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { normalizeTag } from '../utils/tags';
@@ -43,6 +44,7 @@ export default function Catalog() {
 
   return (
     <div className="page">
+      <Breadcrumb current="Plugin Catalog" />
       <div className="page-header">
         <h1>Plugin Catalog</h1>
         <p>{plugins.length} plugins available</p>

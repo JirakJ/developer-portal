@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import plugins from '../data/plugins';
+import Breadcrumb from '../components/Breadcrumb';
 
 export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,6 +40,7 @@ export default function Compare() {
 
   return (
     <div className="page">
+      <Breadcrumb current="Compare Plugins" />
       <div className="page-header">
         <h1>⚖️ Plugin Comparison</h1>
         <p>Select up to 4 plugins to compare side by side</p>

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 import { useToast } from '../contexts/ToastContext';
+import Breadcrumb from '../components/Breadcrumb';
 
 const comparators = {
   name: (a, b) => a.name.localeCompare(b.name),
@@ -43,10 +44,9 @@ function UptimeBar({ days, pct }) {
 
 export default function Health() {
   const toast = useToast();
-  const freemiumCount = plugins.filter(p => p.pricing === 'freemium').length;
-  const paidCount = plugins.length - freemiumCount;
   const [sortKey, setSortKey] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
+  const [filters, setFilters] = useState({ name: '', version: '' });
 
   const uptimeData = useMemo(() => {
     const map = {};
@@ -59,11 +59,20 @@ export default function Health() {
     return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
   }, [uptimeData]);
 
+  const filtered = useMemo(() => {
+    return plugins.filter(p => {
+      const fn = filters.name.toLowerCase();
+      const fv = filters.version.toLowerCase();
+      return (!fn || p.name.toLowerCase().includes(fn)) &&
+             (!fv || p.version.toLowerCase().includes(fv));
+    });
+  }, [filters]);
+
   const sorted = useMemo(() => {
     const cmp = comparators[sortKey] || comparators.name;
-    const list = [...plugins].sort(cmp);
+    const list = [...filtered].sort(cmp);
     return sortDir === 'desc' ? list.reverse() : list;
-  }, [sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir]);
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -79,6 +88,10 @@ export default function Health() {
     return sortDir === 'asc' ? ' ↑' : ' ↓';
   };
 
+  const updateFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
+  const hasFilters = Object.values(filters).some(v => v);
+  const clearFilters = () => setFilters({ name: '', version: '' });
+
   const copyVersion = (version) => {
     navigator.clipboard.writeText(version).then(() => {
       toast.success(`Copied ${version}`);
@@ -89,6 +102,7 @@ export default function Health() {
 
   return (
     <div className="page">
+      <Breadcrumb current="System Health" />
       <div className="page-header">
         <h1>💚 System Health</h1>
         <p>Marketplace status and plugin health overview</p>
@@ -116,7 +130,15 @@ export default function Health() {
       <div className="section">
         <div className="section-header">
           <h2>Plugin Compatibility &amp; Uptime</h2>
-          <span className="uptime-disclaimer">⚠️ Simulated uptime data for illustration</span>
+          <div>
+            {hasFilters && (
+              <span className="table-filter-status">
+                {sorted.length}/{plugins.length}
+                <button className="filter-clear" onClick={clearFilters}>Clear</button>
+              </span>
+            )}
+            <span className="uptime-disclaimer">⚠️ Simulated uptime data for illustration</span>
+          </div>
         </div>
         <table className="data-table">
           <thead>
@@ -125,6 +147,12 @@ export default function Health() {
               <th className="sortable-th" onClick={() => handleSort('version')}>Version{sortIcon('version')}</th>
               <th>30-Day Uptime</th>
               <th>Status</th>
+            </tr>
+            <tr className="filter-row">
+              <td><input type="text" className="column-filter" placeholder="Filter name…" value={filters.name} onChange={e => updateFilter('name', e.target.value)} /></td>
+              <td><input type="text" className="column-filter" placeholder="Filter version…" value={filters.version} onChange={e => updateFilter('version', e.target.value)} /></td>
+              <td></td>
+              <td></td>
             </tr>
           </thead>
           <tbody>
@@ -145,6 +173,9 @@ export default function Health() {
                 </tr>
               );
             })}
+            {sorted.length === 0 && (
+              <tr><td colSpan="4" className="table-empty">No plugins match the current filters</td></tr>
+            )}
           </tbody>
         </table>
       </div>

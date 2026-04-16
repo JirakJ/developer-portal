@@ -10,6 +10,7 @@ import { FavoritesProvider } from './contexts/FavoritesContext';
 import ShortcutsModal from './components/ShortcutsModal';
 import CommandPalette from './components/CommandPalette';
 import BackToTop from './components/BackToTop';
+import AnnouncementBanner from './components/AnnouncementBanner';
 import useGlobalKeys from './hooks/useGlobalKeys';
 import { getItem, setItem } from './utils/storage';
 
@@ -136,6 +137,7 @@ export default function App() {
 
         <div className="main-content">
           <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} onOpenPalette={() => setPaletteOpen(true)} />
+          <AnnouncementBanner />
           <main id="main-content" className="content-area" tabIndex={-1}>
             <ScrollToTop />
             <DocumentTitle />
@@ -159,7 +161,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
           <footer className="portal-footer">
-            <span>© 2026 Jakub Jirák · Developer Portal v1.3.0</span>
+            <span>© 2026 Jakub Jirák · Developer Portal v1.4.0</span>
             <span>
               <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
                 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>

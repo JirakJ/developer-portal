@@ -1,4 +1,20 @@
+import Breadcrumb from '../components/Breadcrumb';
+
 const changelog = [
+  {
+    version: '1.4.0',
+    date: '2026-04-17',
+    changes: [
+      'Added announcement banner with severity levels and dismissal persistence',
+      'Added share button on plugin detail pages (Web Share API + clipboard fallback)',
+      'Added column filters on Releases and Health tables',
+      'Added JSON export alongside CSV on Releases page (respects active filters)',
+      'Added print stylesheet for clean printed output (renders all plugin tabs)',
+      'Added breadcrumb navigation on all pages',
+      'Added export button group layout (CSV + JSON)',
+      'Improved table empty states when filters return no results',
+    ],
+  },
   {
     version: '1.3.0',
     date: '2026-04-16',
@@ -69,6 +85,7 @@ const changelog = [
 export default function Changelog() {
   return (
     <div className="page">
+      <Breadcrumb current="Changelog" />
       <div className="page-header">
         <h1>📝 Changelog</h1>
         <p>Portal version history and release notes</p>

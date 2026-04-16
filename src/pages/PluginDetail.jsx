@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 import FavoriteButton from '../components/FavoriteButton';
+import ShareButton from '../components/ShareButton';
 import { getRelatedPlugins } from '../utils/tags';
 
 const TABS = ['overview', 'features', 'links', 'related', 'activity'];
@@ -70,6 +71,7 @@ export default function PluginDetail() {
             </div>
           </div>
           <FavoriteButton slug={plugin.slug} size={22} />
+          <ShareButton title={plugin.name} size={20} />
         </div>
 
         <div className="detail-tabs" role="tablist">
@@ -89,26 +91,24 @@ export default function PluginDetail() {
         </div>
 
         <div className="detail-tab-content" role="tabpanel">
-          {activeTab === 'overview' && (
-            <>
-              <p className="plugin-detail-desc">{plugin.description}</p>
-              <div className="plugin-tags">
-                {plugin.tags.map(t => (
-                  <Link key={t} to={`/catalog?tag=${encodeURIComponent(t)}`} className="badge">{t}</Link>
-                ))}
-              </div>
-            </>
-          )}
+          <div className={`tab-panel${activeTab === 'overview' ? ' tab-panel-active' : ''}`}>
+            <p className="plugin-detail-desc">{plugin.description}</p>
+            <div className="plugin-tags">
+              {plugin.tags.map(t => (
+                <Link key={t} to={`/catalog?tag=${encodeURIComponent(t)}`} className="badge">{t}</Link>
+              ))}
+            </div>
+          </div>
 
-          {activeTab === 'features' && (
+          <div className={`tab-panel${activeTab === 'features' ? ' tab-panel-active' : ''}`}>
             <ul className="feature-list">
               {plugin.features.map((f, i) => (
                 <li key={i}>✅ {f}</li>
               ))}
             </ul>
-          )}
+          </div>
 
-          {activeTab === 'links' && (
+          <div className={`tab-panel${activeTab === 'links' ? ' tab-panel-active' : ''}`}>
             <div className="plugin-links">
               <a href={marketplaceUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
                 🛒 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
@@ -119,10 +119,10 @@ export default function PluginDetail() {
                 <span className="sr-only">(opens in new tab)</span>
               </a>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'related' && (
-            related.length > 0 ? (
+          <div className={`tab-panel${activeTab === 'related' ? ' tab-panel-active' : ''}`}>
+            {related.length > 0 ? (
               <div className="related-grid">
                 {related.map(r => (
                   <Link to={`/plugin/${r.slug}`} key={r.slug} className="related-card">
@@ -136,10 +136,10 @@ export default function PluginDetail() {
               </div>
             ) : (
               <p className="text-muted">No related plugins found.</p>
-            )
-          )}
+            )}
+          </div>
 
-          {activeTab === 'activity' && (
+          <div className={`tab-panel${activeTab === 'activity' ? ' tab-panel-active' : ''}`}>
             <div className="activity-timeline">
               <p className="timeline-disclaimer">
                 📊 <em>Derived release cadence — estimated from version metadata</em>
@@ -159,7 +159,7 @@ export default function PluginDetail() {
                 </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

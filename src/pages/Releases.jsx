@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 import { useToast } from '../contexts/ToastContext';
+import Breadcrumb from '../components/Breadcrumb';
 
 const comparators = {
   name: (a, b) => a.name.localeCompare(b.name),
@@ -13,12 +14,24 @@ export default function Releases() {
   const toast = useToast();
   const [sortKey, setSortKey] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
+  const [filters, setFilters] = useState({ name: '', version: '', category: '' });
+
+  const filtered = useMemo(() => {
+    return plugins.filter(p => {
+      const fn = filters.name.toLowerCase();
+      const fv = filters.version.toLowerCase();
+      const fc = filters.category.toLowerCase();
+      return (!fn || p.name.toLowerCase().includes(fn)) &&
+             (!fv || p.version.toLowerCase().includes(fv)) &&
+             (!fc || p.category.toLowerCase().includes(fc));
+    });
+  }, [filters]);
 
   const sorted = useMemo(() => {
     const cmp = comparators[sortKey] || comparators.name;
-    const list = [...plugins].sort(cmp);
+    const list = [...filtered].sort(cmp);
     return sortDir === 'desc' ? list.reverse() : list;
-  }, [sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir]);
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -34,6 +47,10 @@ export default function Releases() {
     return sortDir === 'asc' ? ' ↑' : ' ↓';
   };
 
+  const updateFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
+  const hasFilters = Object.values(filters).some(v => v);
+  const clearFilters = () => setFilters({ name: '', version: '', category: '' });
+
   const copyVersion = (version) => {
     navigator.clipboard.writeText(version).then(() => {
       toast.success(`Copied ${version}`);
@@ -42,11 +59,17 @@ export default function Releases() {
     });
   };
 
+  const buildExportData = () => sorted.map(p => ({
+    name: p.name,
+    version: p.version,
+    category: p.category,
+    marketplace: `https://plugins.jetbrains.com/plugin/${p.id}-${p.slug}`,
+  }));
+
   const exportCSV = () => {
+    const data = buildExportData();
     const header = 'Plugin Name,Version,Category,Marketplace URL';
-    const rows = sorted.map(p =>
-      `"${p.name}","${p.version}","${p.category}","https://plugins.jetbrains.com/plugin/${p.id}-${p.slug}"`
-    );
+    const rows = data.map(d => `"${d.name}","${d.version}","${d.category}","${d.marketplace}"`);
     const csv = [header, ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -55,19 +78,42 @@ export default function Releases() {
     a.download = `plugin-releases-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('CSV exported');
+    toast.success(`Exported ${data.length} plugins as CSV`);
+  };
+
+  const exportJSON = () => {
+    const data = buildExportData();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `plugin-releases-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${data.length} plugins as JSON`);
   };
 
   return (
     <div className="page">
+      <Breadcrumb current="Releases" />
       <div className="page-header">
         <div className="page-header-row">
           <div>
             <h1>📦 Releases</h1>
             <p>Latest plugin versions and release history</p>
           </div>
-          <button className="btn-secondary" onClick={exportCSV}>⬇ Export CSV</button>
+          <div className="export-btn-group">
+            <button className="btn-secondary" onClick={exportCSV}>⬇ CSV</button>
+            <button className="btn-secondary" onClick={exportJSON}>⬇ JSON</button>
+          </div>
         </div>
+        {hasFilters && (
+          <div className="table-filter-status">
+            Showing {sorted.length} of {plugins.length} plugins
+            <button className="filter-clear" onClick={clearFilters}>Clear filters</button>
+          </div>
+        )}
       </div>
 
       <table className="data-table">
@@ -78,6 +124,13 @@ export default function Releases() {
             <th className="sortable-th" onClick={() => handleSort('version')}>Version{sortIcon('version')}</th>
             <th className="sortable-th" onClick={() => handleSort('category')}>Category{sortIcon('category')}</th>
             <th>Marketplace</th>
+          </tr>
+          <tr className="filter-row">
+            <td></td>
+            <td><input type="text" className="column-filter" placeholder="Filter name…" value={filters.name} onChange={e => updateFilter('name', e.target.value)} /></td>
+            <td><input type="text" className="column-filter" placeholder="Filter version…" value={filters.version} onChange={e => updateFilter('version', e.target.value)} /></td>
+            <td><input type="text" className="column-filter" placeholder="Filter category…" value={filters.category} onChange={e => updateFilter('category', e.target.value)} /></td>
+            <td></td>
           </tr>
         </thead>
         <tbody>
@@ -98,6 +151,9 @@ export default function Releases() {
               </td>
             </tr>
           ))}
+          {sorted.length === 0 && (
+            <tr><td colSpan="5" className="table-empty">No plugins match the current filters</td></tr>
+          )}
         </tbody>
       </table>
     </div>

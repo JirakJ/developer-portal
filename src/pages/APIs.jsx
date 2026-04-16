@@ -1,3 +1,5 @@
+import Breadcrumb from '../components/Breadcrumb';
+
 export default function APIs() {
   const apis = [
     {
@@ -28,6 +30,7 @@ export default function APIs() {
 
   return (
     <div className="page">
+      <Breadcrumb current="APIs & Integrations" />
       <div className="page-header">
         <h1>🔌 APIs & Integrations</h1>
         <p>External APIs and services used across the plugin suite</p>
