@@ -4,6 +4,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { useToast } from '../contexts/ToastContext';
 import { removeItem, getItem, setItem } from '../utils/storage';
 import { getHealthThreshold, persistHealthThreshold, DEFAULT_HEALTH_THRESHOLD } from '../utils/healthPolicy';
+import { clearDismissedAlerts, getDismissedAlerts } from '../utils/alerts';
 import Breadcrumb from '../components/Breadcrumb';
 
 const themeOptions = [
@@ -21,6 +22,7 @@ export default function Settings() {
   const [recentViewedCount, setRecentViewedCount] = useState(() => getItem('recentViewed', []).length);
   const [compareShortlistCount, setCompareShortlistCount] = useState(() => getItem('compareShortlist', []).length);
   const [presetCount, setPresetCount] = useState(() => getItem('catalogPresets', []).length);
+  const [dismissedAlertCount, setDismissedAlertCount] = useState(() => Object.keys(getDismissedAlerts()).length);
   const [healthThreshold, setHealthThreshold] = useState(() => getHealthThreshold());
   const importRef = useRef(null);
 
@@ -32,6 +34,7 @@ export default function Settings() {
     setCompareShortlistCount(Array.isArray(shortlist) ? shortlist.length : 0);
     setPresetCount(Array.isArray(presets) ? presets.length : 0);
     setSidebarDefault(getItem('sidebarCollapsed', false));
+    setDismissedAlertCount(Object.keys(getDismissedAlerts()).length);
     setHealthThreshold(getHealthThreshold());
   };
 
@@ -71,6 +74,16 @@ export default function Settings() {
     removeItem('catalogPresets');
     setPresetCount(0);
     toast.success('Catalog presets cleared');
+  };
+
+  const handleClearDismissedAlerts = () => {
+    if (dismissedAlertCount === 0) {
+      toast.info('No dismissed alerts to clear');
+      return;
+    }
+    clearDismissedAlerts();
+    setDismissedAlertCount(0);
+    toast.success('Dismissed alerts cleared');
   };
 
   const handleResetAll = () => {
@@ -249,6 +262,13 @@ export default function Settings() {
             <p>{presetCount} saved filter preset(s)</p>
           </div>
           <button className="btn-secondary" onClick={handleClearCatalogPresets}>Clear</button>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Dismissed alerts</strong>
+            <p>{dismissedAlertCount} dismissed alert(s) hidden from Alerts Center</p>
+          </div>
+          <button className="btn-secondary" onClick={handleClearDismissedAlerts}>Clear</button>
         </div>
         <div className="settings-row">
           <div className="settings-row-text">

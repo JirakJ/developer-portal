@@ -22,6 +22,7 @@ const Docs = lazy(() => import('./pages/Docs'));
 const APIs = lazy(() => import('./pages/APIs'));
 const Releases = lazy(() => import('./pages/Releases'));
 const Health = lazy(() => import('./pages/Health'));
+const Alerts = lazy(() => import('./pages/Alerts'));
 const Compare = lazy(() => import('./pages/Compare'));
 const Changelog = lazy(() => import('./pages/Changelog'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -59,6 +60,7 @@ function DocumentTitle() {
       '/apis': 'APIs',
       '/releases': 'Releases',
       '/health': 'System Health',
+      '/alerts': 'Alerts Center',
       '/compare': 'Compare Plugins',
       '/changelog': 'Changelog',
       '/settings': 'Settings',
@@ -152,6 +154,7 @@ export default function App() {
                   <Route path="/apis" element={<APIs />} />
                   <Route path="/releases" element={<Releases />} />
                   <Route path="/health" element={<Health />} />
+                  <Route path="/alerts" element={<Alerts />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/changelog" element={<Changelog />} />
                   <Route path="/settings" element={<Settings />} />
@@ -162,7 +165,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
           <footer className="portal-footer">
-            <span>© 2026 Jakub Jirák · Developer Portal v1.8.0</span>
+            <span>© 2026 Jakub Jirák · Developer Portal v1.9.0</span>
             <span>
               <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
                 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>

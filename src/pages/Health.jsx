@@ -5,26 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import Breadcrumb from '../components/Breadcrumb';
 import { compareVersions } from '../utils/versioning';
 import { getHealthThreshold, persistHealthThreshold } from '../utils/healthPolicy';
-
-/** Seeded pseudo-random for stable uptime data */
-function seededRandom(seed) {
-  let s = seed;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-function generateUptime(slug) {
-  const seed = slug.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const rng = seededRandom(seed);
-  const days = [];
-  for (let i = 0; i < 30; i++) {
-    days.push(rng() > 0.015 ? 1 : 0);
-  }
-  const pct = (days.filter(d => d === 1).length / 30 * 100).toFixed(1);
-  return { days, pct };
-}
+import { generatePortfolioUptime, isUptimeDegraded } from '../utils/uptime';
 
 function UptimeBar({ days, pct, threshold }) {
   return (
@@ -48,9 +29,7 @@ export default function Health() {
   const [healthThreshold, setHealthThreshold] = useState(() => getHealthThreshold());
 
   const uptimeData = useMemo(() => {
-    const map = {};
-    plugins.forEach(p => { map[p.slug] = generateUptime(p.slug); });
-    return map;
+    return generatePortfolioUptime(plugins);
   }, []);
 
   const avgUptime = useMemo(() => {
@@ -59,14 +38,14 @@ export default function Health() {
   }, [uptimeData]);
 
   const degradedCount = useMemo(() =>
-    plugins.filter(p => parseFloat(uptimeData[p.slug].pct) < healthThreshold).length,
+    plugins.filter(p => isUptimeDegraded(uptimeData[p.slug].pct, healthThreshold)).length,
   [uptimeData, healthThreshold]);
 
   const filtered = useMemo(() => {
     return plugins.filter(p => {
       const fn = filters.name.toLowerCase();
       const fv = filters.version.toLowerCase();
-      const isDegraded = parseFloat(uptimeData[p.slug].pct) < healthThreshold;
+      const isDegraded = isUptimeDegraded(uptimeData[p.slug].pct, healthThreshold);
       return (!fn || p.name.toLowerCase().includes(fn)) &&
              (!fv || p.version.toLowerCase().includes(fv)) &&
              (!showDegradedOnly || isDegraded);
@@ -119,7 +98,7 @@ export default function Health() {
 
   const copyDegradedReport = async () => {
     const degraded = sorted
-      .filter(p => parseFloat(uptimeData[p.slug].pct) < healthThreshold)
+      .filter(p => isUptimeDegraded(uptimeData[p.slug].pct, healthThreshold))
       .map(p => `${p.name} (v${p.version}) — ${uptimeData[p.slug].pct}%`);
     if (degraded.length === 0) {
       toast.info('No degraded plugins for current threshold');
@@ -223,7 +202,7 @@ export default function Health() {
           <tbody>
             {sorted.map(p => {
               const ut = uptimeData[p.slug];
-              const isDegraded = parseFloat(ut.pct) < healthThreshold;
+              const isDegraded = isUptimeDegraded(ut.pct, healthThreshold);
               return (
                 <tr key={p.slug}>
                   <td><Link to={`/plugin/${p.slug}`}>{p.icon} {p.name}</Link></td>

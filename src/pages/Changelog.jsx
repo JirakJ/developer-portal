@@ -2,6 +2,19 @@ import Breadcrumb from '../components/Breadcrumb';
 
 const changelog = [
   {
+    version: '1.9.0',
+    date: '2026-04-16',
+    changes: [
+      'Added dedicated Alerts Center with severity and status filters, open/dismissed workflows, and digest copy action',
+      'Added shared alerts domain model that correlates stale releases and degraded uptime incidents into one operational feed',
+      'Added new Alerts navigation in sidebar and command palette, including live open-alert badges and quick clearing actions',
+      'Home now includes an Operations Pulse section with deep links into active incidents and policy controls',
+      'Settings now includes dismissed-alert management controls to reset hidden incidents',
+      'Added shared uptime utility and reused it across health and alert intelligence surfaces',
+      'Updated release metadata and announcement for v1.9.0',
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-04-16',
     changes: [

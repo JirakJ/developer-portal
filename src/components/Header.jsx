@@ -9,6 +9,7 @@ const routeTitles = {
   '/apis': 'APIs',
   '/releases': 'Releases',
   '/health': 'System Health',
+  '/alerts': 'Alerts Center',
   '/settings': 'Settings',
 };
 

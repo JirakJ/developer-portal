@@ -1,5 +1,10 @@
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useFavorites } from '../contexts/FavoritesContext';
+import plugins from '../data/plugins';
+import { getHealthThreshold } from '../utils/healthPolicy';
+import { generatePortfolioUptime } from '../utils/uptime';
+import { ALERTS_UPDATED_EVENT, getDismissedAlerts, getOpenAlerts, getPortfolioAlerts } from '../utils/alerts';
 
 /* SVG icon components — clean, monochrome, Lucide-style */
 const icons = {
@@ -9,6 +14,7 @@ const icons = {
   api: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>,
   release: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
   health: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
+  alerts: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   compare: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   changelog: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   settings: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1.08z"/></svg>,
@@ -25,6 +31,7 @@ const navItems = [
   { section: 'Operations', items: [
     { to: '/releases', icon: icons.release, label: 'Releases' },
     { to: '/health', icon: icons.health, label: 'System Health' },
+    { to: '/alerts', icon: icons.alerts, label: 'Alerts' },
     { to: '/changelog', icon: icons.changelog, label: 'Changelog' },
     { to: '/settings', icon: icons.settings, label: 'Settings' },
   ]},
@@ -35,6 +42,19 @@ const expandIcon = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" s
 
 export default function Sidebar({ open, onNavigate, collapsed, onToggleCollapse }) {
   const { count: favCount } = useFavorites();
+  const [openAlertCount, setOpenAlertCount] = useState(0);
+
+  useEffect(() => {
+    const handleAlertsUpdate = () => {
+      const threshold = getHealthThreshold();
+      const alerts = getPortfolioAlerts(plugins, threshold, generatePortfolioUptime(plugins));
+      setOpenAlertCount(getOpenAlerts(alerts, getDismissedAlerts()).length);
+    };
+    handleAlertsUpdate();
+    window.addEventListener(ALERTS_UPDATED_EVENT, handleAlertsUpdate);
+    return () => window.removeEventListener(ALERTS_UPDATED_EVENT, handleAlertsUpdate);
+  }, []);
+
   return (
     <aside className={`sidebar${open ? ' sidebar-open' : ''}${collapsed ? ' sidebar-collapsed' : ''}`}>
       <div className="sidebar-brand">
@@ -68,9 +88,8 @@ export default function Sidebar({ open, onNavigate, collapsed, onToggleCollapse 
               >
                 <span className="sidebar-icon">{item.icon}</span>
                 {!collapsed && <span>{item.label}</span>}
-                {!collapsed && item.to === '/catalog' && favCount > 0 && (
-                  <span className="sidebar-badge">{favCount}</span>
-                )}
+                {!collapsed && item.to === '/catalog' && favCount > 0 && <span className="sidebar-badge">{favCount}</span>}
+                {!collapsed && item.to === '/alerts' && openAlertCount > 0 && <span className="sidebar-badge sidebar-badge-alert">{openAlertCount}</span>}
               </NavLink>
             ))}
           </div>

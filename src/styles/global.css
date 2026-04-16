@@ -296,6 +296,9 @@ a:hover { color: #60a5fa; }
   text-align: center;
   line-height: 1.5;
 }
+.sidebar-badge-alert {
+  background: var(--red);
+}
 
 /* ── Header ── */
 .header {
@@ -389,6 +392,14 @@ a:hover { color: #60a5fa; }
 }
 .stat-card:hover { border-color: rgba(255,255,255,.1); }
 .stat-card.stat-green { border-left: 3px solid var(--green); }
+.stat-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+.stat-card-link:hover {
+  text-decoration: none;
+  color: inherit;
+}
 .stat-label {
   font-size: 11px;
   color: var(--text-muted);
@@ -2491,6 +2502,39 @@ a:hover { color: #60a5fa; }
   font-size: 11px;
   color: var(--text-muted);
 }
+.alerts-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.alerts-filters {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.alerts-meta {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.alert-severity-critical {
+  background: var(--red-soft);
+  color: var(--red);
+}
+.alert-severity-warning {
+  background: var(--orange-soft);
+  color: var(--orange);
+}
+.alert-severity-info {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+[data-theme="light"] .stat-card-link { border-color: rgba(0,0,0,.08); }
+[data-theme="light"] .sidebar-badge-alert { background: #dc2626; }
 
 .health-controls {
   display: flex;
@@ -2556,7 +2600,7 @@ a:hover { color: #60a5fa; }
   .btn-primary, .btn-secondary, .btn-danger, .btn-logout,
   .export-btn-group, .catalog-toolbar, .view-toggle, .favorites-toggle,
   .catalog-presets, .catalog-bulk-bar, .filter-row, .share-btn, .favorite-btn, .compare-toggle-btn, .install-copy-btn, .detail-tabs,
-  .command-palette-trigger, .compare-selector, .compare-feature-filter, .release-freshness-filters, .health-controls, .back-to-top { display: none !important; }
+  .command-palette-trigger, .compare-selector, .compare-feature-filter, .release-freshness-filters, .health-controls, .alerts-filters, .back-to-top { display: none !important; }
 
   body, html, #root { background: white !important; color: black !important; }
   .app-layout { display: block !important; }

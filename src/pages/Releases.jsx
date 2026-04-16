@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import plugins from '../data/plugins';
 import { useToast } from '../contexts/ToastContext';
 import Breadcrumb from '../components/Breadcrumb';
@@ -20,10 +20,14 @@ const FRESHNESS_OPTIONS = [
 
 export default function Releases() {
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sortKey, setSortKey] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
   const [filters, setFilters] = useState({ name: '', version: '', category: '' });
-  const [freshness, setFreshness] = useState('all');
+  const [freshness, setFreshness] = useState(() => {
+    const filter = searchParams.get('freshness');
+    return FRESHNESS_OPTIONS.some(option => option.value === filter) ? filter : 'all';
+  });
 
   const freshnessMeta = useMemo(() => {
     const map = {};
@@ -80,7 +84,15 @@ export default function Releases() {
   const hasFilters = freshness !== 'all' || Object.values(filters).some(v => v);
   const clearFilters = () => {
     setFilters({ name: '', version: '', category: '' });
-    setFreshness('all');
+    updateFreshness('all');
+  };
+
+  const updateFreshness = (value) => {
+    setFreshness(value);
+    const next = new URLSearchParams(searchParams);
+    if (value === 'all') next.delete('freshness');
+    else next.set('freshness', value);
+    setSearchParams(next, { replace: true });
   };
 
   const copyVersion = async (version) => {
@@ -148,7 +160,7 @@ export default function Releases() {
               <button
                 key={option.value}
                 className={`release-freshness-chip${freshness === option.value ? ' active' : ''}`}
-                onClick={() => setFreshness(option.value)}
+                onClick={() => updateFreshness(option.value)}
               >
                 {option.label} ({freshnessCounts[option.value] ?? 0})
               </button>

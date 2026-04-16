@@ -6,6 +6,8 @@ import { getRecentViewed } from '../utils/recentViewed';
 import { getCompareShortlist } from '../utils/compareShortlist';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { compareVersions } from '../utils/versioning';
+import { getHealthThreshold } from '../utils/healthPolicy';
+import { getDismissedAlerts, getOpenAlerts, getPortfolioAlerts } from '../utils/alerts';
 
 const categoryIcons = {
   'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
@@ -84,6 +86,15 @@ export default function Home() {
   const compareShortlist = useMemo(() => {
     return getCompareShortlist().map(slug => plugins.find(p => p.slug === slug)).filter(Boolean).slice(0, 4);
   }, []);
+  const healthThreshold = useMemo(() => getHealthThreshold(), []);
+  const openAlerts = useMemo(() => {
+    const allAlerts = getPortfolioAlerts(plugins, healthThreshold);
+    return getOpenAlerts(allAlerts, getDismissedAlerts());
+  }, [healthThreshold]);
+  const criticalAlerts = openAlerts.filter(alert => alert.severity === 'critical').length;
+  const warningAlerts = openAlerts.filter(alert => alert.severity === 'warning').length;
+  const staleAlerts = openAlerts.filter(alert => alert.type === 'release-stale').length;
+  const degradedAlerts = openAlerts.filter(alert => alert.type === 'health-degraded').length;
 
   return (
     <div className="page">
@@ -140,6 +151,39 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-header">
+          <h2>Operations Pulse</h2>
+          <Link to="/alerts" className="section-link">Open alerts →</Link>
+        </div>
+        <div className="stats-grid">
+          <Link to="/alerts?status=open" className="stat-card stat-card-link">
+            <div className="stat-label">Open Alerts</div>
+            <div className="stat-value">{openAlerts.length}</div>
+          </Link>
+          <Link to="/alerts?status=open&severity=critical" className="stat-card stat-card-link">
+            <div className="stat-label">Critical Alerts</div>
+            <div className="stat-value">{criticalAlerts}</div>
+          </Link>
+          <Link to="/health" className="stat-card stat-card-link">
+            <div className="stat-label">Degraded Uptime Alerts</div>
+            <div className="stat-value">{degradedAlerts}</div>
+          </Link>
+          <Link to="/releases?freshness=stale" className="stat-card stat-card-link">
+            <div className="stat-label">Stale Release Alerts</div>
+            <div className="stat-value">{staleAlerts}</div>
+          </Link>
+          <Link to="/alerts?status=open&severity=warning" className="stat-card stat-card-link">
+            <div className="stat-label">Warning Alerts</div>
+            <div className="stat-value">{warningAlerts}</div>
+          </Link>
+          <Link to="/settings" className="stat-card stat-card-link">
+            <div className="stat-label">Health Threshold</div>
+            <div className="stat-value">{healthThreshold.toFixed(1)}%</div>
+          </Link>
         </div>
       </div>
 
