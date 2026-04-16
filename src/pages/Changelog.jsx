@@ -1,5 +1,20 @@
 const changelog = [
   {
+    version: '1.3.0',
+    date: '2026-04-16',
+    changes: [
+      'Added command palette (⌘K) with pages, plugins, and actions',
+      'Added Settings page for managing portal preferences',
+      'Added tabbed navigation on plugin detail pages (Overview, Features, Links, Related, Activity)',
+      'Added derived activity timeline on plugin detail pages',
+      'Added analytics dashboard cards (donut chart, pricing split, highlights)',
+      'Added 30-day uptime bars on System Health page (simulated)',
+      'Replaced inline header search with command palette trigger',
+      'Settings page: theme selector, sidebar default, clear data, reset all',
+      'Improved Home page with richer analytics and visual indicators',
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-04-16',
     changes: [

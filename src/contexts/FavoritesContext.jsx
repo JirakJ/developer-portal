@@ -34,8 +34,12 @@ export function FavoritesProvider({ children }) {
 
   const isFavorite = useCallback((slug) => favorites.includes(slug), [favorites]);
 
+  const clearAll = useCallback(() => {
+    persist([]);
+  }, [persist]);
+
   return (
-    <FavoritesContext.Provider value={{ favorites, toggle, isFavorite, count: favorites.length }}>
+    <FavoritesContext.Provider value={{ favorites, toggle, isFavorite, count: favorites.length, clearAll }}>
       {children}
     </FavoritesContext.Provider>
   );

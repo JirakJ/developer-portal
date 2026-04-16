@@ -11,14 +11,12 @@ const mod = isMac ? '⌘' : 'Ctrl';
 
 const shortcuts = [
   { section: 'Navigation', items: [
-    { keys: [`${mod}+K`], desc: 'Open search' },
+    { keys: [`${mod}+K`], desc: 'Open command palette' },
     { keys: ['?'], desc: 'Show keyboard shortcuts' },
-    { keys: ['Esc'], desc: 'Close modal / clear search' },
+    { keys: ['Esc'], desc: 'Close modal / palette' },
   ]},
-  { section: 'Catalog', items: [
-    { keys: ['G', 'then', 'H'], desc: 'Go to Home' },
-    { keys: ['G', 'then', 'C'], desc: 'Go to Catalog' },
-    { keys: ['G', 'then', 'D'], desc: 'Go to Docs' },
+  { section: 'Quick Nav (via palette)', items: [
+    { keys: [`${mod}+K`, 'then', 'type'], desc: 'Search plugins, pages, actions' },
   ]},
 ];
 

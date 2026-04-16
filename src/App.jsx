@@ -8,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 import ShortcutsModal from './components/ShortcutsModal';
+import CommandPalette from './components/CommandPalette';
 import BackToTop from './components/BackToTop';
 import useGlobalKeys from './hooks/useGlobalKeys';
 import { getItem, setItem } from './utils/storage';
@@ -22,6 +23,7 @@ const Releases = lazy(() => import('./pages/Releases'));
 const Health = lazy(() => import('./pages/Health'));
 const Compare = lazy(() => import('./pages/Compare'));
 const Changelog = lazy(() => import('./pages/Changelog'));
+const Settings = lazy(() => import('./pages/Settings'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const STORAGE_KEY = 'dp_user';
@@ -58,6 +60,7 @@ function DocumentTitle() {
       '/health': 'System Health',
       '/compare': 'Compare Plugins',
       '/changelog': 'Changelog',
+      '/settings': 'Settings',
     };
     const title = pathname.startsWith('/plugin/')
       ? 'Plugin Detail'
@@ -77,6 +80,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => getItem('sidebarCollapsed', false));
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -94,7 +98,8 @@ export default function App() {
   // Global keyboard shortcuts (? for help, G-then-X for nav)
   const keyMap = useMemo(() => ({
     '?': { handler: () => setShortcutsOpen(s => !s) },
-    'Escape': { handler: () => setShortcutsOpen(false), ignoreInput: true },
+    'Escape': { handler: () => { setShortcutsOpen(false); setPaletteOpen(false); }, ignoreInput: true },
+    'k': { handler: () => setPaletteOpen(true), ctrl: true },
   }), []);
   useGlobalKeys(keyMap);
 
@@ -130,7 +135,7 @@ export default function App() {
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={sidebarCollapsed} onToggleCollapse={toggleCollapse} />
 
         <div className="main-content">
-          <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} />
+          <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} onOpenPalette={() => setPaletteOpen(true)} />
           <main id="main-content" className="content-area" tabIndex={-1}>
             <ScrollToTop />
             <DocumentTitle />
@@ -146,6 +151,7 @@ export default function App() {
                   <Route path="/health" element={<Health />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/changelog" element={<Changelog />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="/404" element={<NotFound />} />
                   <Route path="*" element={<Navigate to="/404" replace />} />
                 </Routes>
@@ -153,7 +159,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
           <footer className="portal-footer">
-            <span>© 2026 Jakub Jirák · Developer Portal v1.2.0</span>
+            <span>© 2026 Jakub Jirák · Developer Portal v1.3.0</span>
             <span>
               <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
                 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
@@ -164,6 +170,7 @@ export default function App() {
 
         <BackToTop />
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onOpenShortcuts={() => setShortcutsOpen(true)} />
       </div>
     </ToastProvider>
     </FavoritesProvider>
