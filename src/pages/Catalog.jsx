@@ -2,17 +2,23 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import PluginCard from '../components/PluginCard';
+import { getItem, setItem } from '../utils/storage';
 
 export default function Catalog() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(searchParams.get('category') || '');
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState(() => getItem('catalogView', 'grid'));
 
   useEffect(() => {
     const cat = searchParams.get('category');
     if (cat) setCategory(cat);
   }, [searchParams]);
+
+  const changeView = (mode) => {
+    setViewMode(mode);
+    setItem('catalogView', mode);
+  };
 
   const filtered = useMemo(() => {
     return plugins.filter(p => {
@@ -52,12 +58,12 @@ export default function Catalog() {
         <div className="view-toggle">
           <button
             className={viewMode === 'grid' ? 'active' : ''}
-            onClick={() => setViewMode('grid')}
+            onClick={() => changeView('grid')}
             title="Grid view"
           >▦</button>
           <button
             className={viewMode === 'list' ? 'active' : ''}
-            onClick={() => setViewMode('list')}
+            onClick={() => changeView('list')}
             title="List view"
           >☰</button>
         </div>

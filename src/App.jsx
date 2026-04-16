@@ -1,8 +1,12 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ToastProvider } from './contexts/ToastContext';
+import ShortcutsModal from './components/ShortcutsModal';
+import BackToTop from './components/BackToTop';
+import useGlobalKeys from './hooks/useGlobalKeys';
 
 const Login = lazy(() => import('./pages/Login'));
 const Home = lazy(() => import('./pages/Home'));
@@ -12,6 +16,8 @@ const Docs = lazy(() => import('./pages/Docs'));
 const APIs = lazy(() => import('./pages/APIs'));
 const Releases = lazy(() => import('./pages/Releases'));
 const Health = lazy(() => import('./pages/Health'));
+const Compare = lazy(() => import('./pages/Compare'));
+const Changelog = lazy(() => import('./pages/Changelog'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const STORAGE_KEY = 'dp_user';
@@ -43,6 +49,8 @@ function DocumentTitle() {
       '/apis': 'APIs',
       '/releases': 'Releases',
       '/health': 'System Health',
+      '/compare': 'Compare Plugins',
+      '/changelog': 'Changelog',
     };
     const title = pathname.startsWith('/plugin/')
       ? 'Plugin Detail'
@@ -60,10 +68,19 @@ export default function App() {
     } catch { return null; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Close mobile sidebar on navigation
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+
+  // Global keyboard shortcuts (? for help, G-then-X for nav)
+  const keyMap = useMemo(() => ({
+    '?': { handler: () => setShortcutsOpen(s => !s) },
+    'Escape': { handler: () => setShortcutsOpen(false), ignoreInput: true },
+  }), []);
+  useGlobalKeys(keyMap);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -84,45 +101,52 @@ export default function App() {
   }
 
   return (
-    <div className="app-layout">
-      <a href="#main-content" className="skip-link">Skip to content</a>
+    <ToastProvider>
+      <div className="app-layout">
+        <a href="#main-content" className="skip-link">Skip to content</a>
 
-      {sidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
-      )}
+        {sidebarOpen && (
+          <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+        )}
 
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="main-content">
-        <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} />
-        <main id="main-content" className="content-area" tabIndex={-1}>
-          <ScrollToTop />
-          <DocumentTitle />
-          <ErrorBoundary key={location.pathname}>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/catalog" element={<Catalog />} />
-                <Route path="/plugin/:slug" element={<PluginDetail />} />
-                <Route path="/docs" element={<Docs />} />
-                <Route path="/apis" element={<APIs />} />
-                <Route path="/releases" element={<Releases />} />
-                <Route path="/health" element={<Health />} />
-                <Route path="/404" element={<NotFound />} />
-                <Route path="*" element={<Navigate to="/404" replace />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </main>
-        <footer className="portal-footer">
-          <span>© 2026 Jakub Jirák · Developer Portal v1.0.0</span>
-          <span>
-            <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
-              JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
-            </a>
-          </span>
-        </footer>
+        <div className="main-content">
+          <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} />
+          <main id="main-content" className="content-area" tabIndex={-1}>
+            <ScrollToTop />
+            <DocumentTitle />
+            <ErrorBoundary key={location.pathname}>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/catalog" element={<Catalog />} />
+                  <Route path="/plugin/:slug" element={<PluginDetail />} />
+                  <Route path="/docs" element={<Docs />} />
+                  <Route path="/apis" element={<APIs />} />
+                  <Route path="/releases" element={<Releases />} />
+                  <Route path="/health" element={<Health />} />
+                  <Route path="/compare" element={<Compare />} />
+                  <Route path="/changelog" element={<Changelog />} />
+                  <Route path="/404" element={<NotFound />} />
+                  <Route path="*" element={<Navigate to="/404" replace />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </main>
+          <footer className="portal-footer">
+            <span>© 2026 Jakub Jirák · Developer Portal v1.1.0</span>
+            <span>
+              <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
+                JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
+              </a>
+            </span>
+          </footer>
+        </div>
+
+        <BackToTop />
+        <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </div>
-    </div>
+    </ToastProvider>
   );
 }
