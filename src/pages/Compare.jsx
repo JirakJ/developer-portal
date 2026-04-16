@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 import Breadcrumb from '../components/Breadcrumb';
@@ -13,6 +13,7 @@ export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
   const diffOnly = searchParams.get('diff') === '1';
+  const [featureQuery, setFeatureQuery] = useState('');
 
   const selectedSlugs = useMemo(() => {
     const ids = searchParams.get('plugins');
@@ -74,12 +75,14 @@ export default function Compare() {
   const pricingValues = selected.map(p => p.pricing);
   const tagValues = selected.map(p => p.tags.join(', '));
   const visibleFeatures = useMemo(() => {
+    const q = featureQuery.trim().toLowerCase();
     return allFeatures.filter(f => {
+      if (q && !f.toLowerCase().includes(q)) return false;
       if (!diffOnly) return true;
       const presence = selected.map(p => p.features.includes(f));
       return hasDifferences(presence);
     });
-  }, [allFeatures, selected, diffOnly]);
+  }, [allFeatures, selected, diffOnly, featureQuery]);
 
   const exportMarkdown = async () => {
     if (selected.length < 2) return;
@@ -128,6 +131,17 @@ export default function Compare() {
           <button className="btn-secondary" onClick={copyCompareLink} disabled={selected.length === 0}>Copy Link</button>
           <button className="btn-secondary" onClick={clearAll} disabled={selected.length === 0}>Clear</button>
         </div>
+      </div>
+
+      <div className="compare-feature-filter">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Filter feature rows..."
+          value={featureQuery}
+          onChange={e => setFeatureQuery(e.target.value)}
+        />
+        <span className="compare-feature-count">{visibleFeatures.length} feature row(s)</span>
       </div>
 
       <div className="compare-selector">
@@ -201,6 +215,13 @@ export default function Compare() {
                   ))}
                 </tr>
               ))}
+              {visibleFeatures.length === 0 && (
+                <tr>
+                  <td className="table-empty" colSpan={selected.length + 1}>
+                    No feature rows match the current filter.
+                  </td>
+                </tr>
+              )}
               {(!diffOnly || hasDifferences(tagValues)) && (
                 <tr>
                   <td className="compare-label">Tags</td>

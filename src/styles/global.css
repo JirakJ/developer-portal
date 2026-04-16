@@ -446,6 +446,21 @@ a:hover { color: #60a5fa; }
   flex-wrap: wrap;
   align-items: center;
 }
+.catalog-bulk-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.catalog-bulk-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card);
+}
 .search-input {
   flex: 1;
   min-width: 220px;
@@ -557,6 +572,35 @@ a:hover { color: #60a5fa; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 12px;
+}
+.catalog-grid-item {
+  position: relative;
+}
+.catalog-grid-item-selected .plugin-card {
+  border-color: var(--cyan);
+  box-shadow: inset 0 0 0 1px var(--cyan-soft);
+}
+.catalog-select-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.catalog-select-checkbox input {
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--cyan);
+}
+.catalog-row-selected td {
+  background: var(--cyan-soft) !important;
 }
 
 /* ── Plugin Card ── */
@@ -1439,6 +1483,19 @@ a:hover { color: #60a5fa; }
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.compare-feature-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.compare-feature-filter .search-input {
+  max-width: 420px;
+}
+.compare-feature-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
 .compare-diff-active {
   border-color: var(--cyan) !important;
   color: var(--cyan) !important;
@@ -1564,6 +1621,19 @@ a:hover { color: #60a5fa; }
 }
 .compare-toggle-btn:hover { color: var(--cyan); transform: scale(1.1); }
 .compare-toggle-btn.compare-toggle-active { color: var(--cyan); }
+.install-copy-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, transform .15s;
+}
+.install-copy-btn:hover { color: var(--blue); transform: scale(1.1); }
 
 /* ── Tag Cloud ── */
 .tag-cloud {
@@ -1961,6 +2031,11 @@ a:hover { color: #60a5fa; }
 .settings-row:last-child { border-bottom: none; }
 .settings-row-text strong { display: block; font-size: 14px; color: var(--text-primary); }
 .settings-row-text p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.settings-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 .settings-toggle {
   position: relative;
   width: 44px;
@@ -2402,8 +2477,8 @@ a:hover { color: #60a5fa; }
   .skip-link, .announcement-banner, .progress-bar,
   .btn-primary, .btn-secondary, .btn-danger, .btn-logout,
   .export-btn-group, .catalog-toolbar, .view-toggle, .favorites-toggle,
-  .catalog-presets, .filter-row, .share-btn, .favorite-btn, .compare-toggle-btn, .detail-tabs,
-  .command-palette-trigger, .compare-selector, .back-to-top { display: none !important; }
+  .catalog-presets, .catalog-bulk-bar, .filter-row, .share-btn, .favorite-btn, .compare-toggle-btn, .install-copy-btn, .detail-tabs,
+  .command-palette-trigger, .compare-selector, .compare-feature-filter, .back-to-top { display: none !important; }
 
   body, html, #root { background: white !important; color: black !important; }
   .app-layout { display: block !important; }

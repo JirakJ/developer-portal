@@ -4,6 +4,7 @@ import plugins from '../data/plugins';
 import FavoriteButton from '../components/FavoriteButton';
 import CompareToggleButton from '../components/CompareToggleButton';
 import ShareButton from '../components/ShareButton';
+import { useToast } from '../contexts/ToastContext';
 import { getRelatedPlugins } from '../utils/tags';
 import { pushRecentViewed } from '../utils/recentViewed';
 
@@ -33,12 +34,30 @@ export default function PluginDetail() {
   const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const plugin = plugins.find(p => p.slug === slug);
+  const toast = useToast();
 
   const activeTab = TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
   const setTab = (tab) => setSearchParams({ tab }, { replace: true });
   const related = useMemo(() => (plugin ? getRelatedPlugins(slug, 4) : []), [plugin, slug]);
   const timeline = useMemo(() => (plugin ? deriveTimeline(plugin.version) : []), [plugin]);
   const marketplaceUrl = plugin ? `https://plugins.jetbrains.com/plugin/${plugin.id}-${plugin.slug}` : '';
+
+  const copyInstallInfo = async () => {
+    if (!plugin) return;
+    const info = [
+      `Plugin: ${plugin.name}`,
+      `Plugin ID: ${plugin.id}`,
+      `Slug: ${plugin.slug}`,
+      `Version: ${plugin.version}`,
+      `Marketplace: ${marketplaceUrl}`,
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(info);
+      toast.success('Install info copied');
+    } catch {
+      toast.error('Failed to copy install info');
+    }
+  };
 
   useEffect(() => {
     if (plugin) pushRecentViewed(slug);
@@ -76,6 +95,12 @@ export default function PluginDetail() {
             </div>
           </div>
           <CompareToggleButton slug={plugin.slug} size={20} />
+          <button className="install-copy-btn" onClick={copyInstallInfo} title="Copy install info" aria-label="Copy install info">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
           <FavoriteButton slug={plugin.slug} size={22} />
           <ShareButton title={plugin.name} size={20} />
         </div>

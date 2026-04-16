@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useToast } from '../contexts/ToastContext';
@@ -20,6 +20,17 @@ export default function Settings() {
   const [recentViewedCount, setRecentViewedCount] = useState(() => getItem('recentViewed', []).length);
   const [compareShortlistCount, setCompareShortlistCount] = useState(() => getItem('compareShortlist', []).length);
   const [presetCount, setPresetCount] = useState(() => getItem('catalogPresets', []).length);
+  const importRef = useRef(null);
+
+  const refreshCounts = () => {
+    const recentViewed = getItem('recentViewed', []);
+    const shortlist = getItem('compareShortlist', []);
+    const presets = getItem('catalogPresets', []);
+    setRecentViewedCount(Array.isArray(recentViewed) ? recentViewed.length : 0);
+    setCompareShortlistCount(Array.isArray(shortlist) ? shortlist.length : 0);
+    setPresetCount(Array.isArray(presets) ? presets.length : 0);
+    setSidebarDefault(getItem('sidebarCollapsed', false));
+  };
 
   const handleSidebarDefault = (val) => {
     setSidebarDefault(val);
@@ -66,7 +77,52 @@ export default function Settings() {
       if (key?.startsWith('dp_')) keys.push(key);
     }
     keys.forEach(k => localStorage.removeItem(k));
+    refreshCounts();
     toast.success(`Reset ${keys.length} preference(s). Reload for full effect.`);
+  };
+
+  const handleExportPreferences = () => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {},
+    };
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('dp_')) payload.data[key] = localStorage.getItem(key);
+    }
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `developer-portal-preferences-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Preferences exported');
+  };
+
+  const handleImportPreferences = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const entries = Object.entries(parsed?.data || {});
+      let restored = 0;
+      entries.forEach(([key, value]) => {
+        if (key.startsWith('dp_') && typeof value === 'string') {
+          localStorage.setItem(key, value);
+          restored += 1;
+        }
+      });
+      refreshCounts();
+      toast.success(`Imported ${restored} preference item(s). Reload for full effect.`);
+    } catch {
+      toast.error('Invalid preferences file');
+    } finally {
+      e.target.value = '';
+    }
   };
 
   return (
@@ -150,6 +206,23 @@ export default function Settings() {
             <p>{presetCount} saved filter preset(s)</p>
           </div>
           <button className="btn-secondary" onClick={handleClearCatalogPresets}>Clear</button>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Preferences backup</strong>
+            <p>Export or restore all portal settings as JSON</p>
+          </div>
+          <div className="settings-actions">
+            <button className="btn-secondary" onClick={handleExportPreferences}>Export</button>
+            <button className="btn-secondary" onClick={() => importRef.current?.click()}>Import</button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json"
+              style={{ display: 'none' }}
+              onChange={handleImportPreferences}
+            />
+          </div>
         </div>
       </div>
 

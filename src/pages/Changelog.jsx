@@ -2,6 +2,19 @@ import Breadcrumb from '../components/Breadcrumb';
 
 const changelog = [
   {
+    version: '1.7.0',
+    date: '2026-04-16',
+    changes: [
+      'Added Catalog bulk selection with actions for compare and selected JSON export',
+      'Catalog selection now persists in URL via sel query parameter',
+      'Compare page now supports feature-row search and row count feedback',
+      'Plugin detail now includes copy-install-info action with plugin metadata',
+      'Settings now supports preferences backup export and JSON restore import',
+      'Improved print layout exclusions for new interactive controls',
+      'Updated release metadata and announcement for v1.7.0',
+    ],
+  },
+  {
     version: '1.6.0',
     date: '2026-04-16',
     changes: [

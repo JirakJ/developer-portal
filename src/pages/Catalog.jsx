@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import PluginCard from '../components/PluginCard';
 import Breadcrumb from '../components/Breadcrumb';
@@ -7,6 +7,7 @@ import { getItem, setItem } from '../utils/storage';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useToast } from '../contexts/ToastContext';
 import { normalizeTag } from '../utils/tags';
+import { getCompareShortlist, setCompareShortlist } from '../utils/compareShortlist';
 
 const PRESETS_KEY = 'catalogPresets';
 const MAX_PRESETS = 8;
@@ -17,6 +18,7 @@ function readCatalogState(searchParams) {
   const view = searchParams.get('view');
   const sort = searchParams.get('sort');
   const dir = searchParams.get('dir');
+  const sel = searchParams.get('sel');
   return {
     search: searchParams.get('q') || '',
     category: searchParams.get('category') || '',
@@ -25,11 +27,13 @@ function readCatalogState(searchParams) {
     viewMode: view === 'list' ? 'list' : (view === 'grid' ? 'grid' : defaultView),
     sortKey: SORT_KEYS.includes(sort) ? sort : 'name',
     sortDir: dir === 'desc' ? 'desc' : 'asc',
+    selectedSlugs: sel ? sel.split(',').filter(Boolean) : [],
   };
 }
 
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [presets, setPresets] = useState(() => getItem(PRESETS_KEY, []));
   const [presetName, setPresetName] = useState('');
   const { isFavorite } = useFavorites();
@@ -43,6 +47,7 @@ export default function Catalog() {
     viewMode,
     sortKey,
     sortDir,
+    selectedSlugs,
   } = readCatalogState(searchParams);
 
   const updateState = (overrides) => {
@@ -54,6 +59,7 @@ export default function Catalog() {
       viewMode,
       sortKey,
       sortDir,
+      selectedSlugs,
       ...overrides,
     };
     const params = new URLSearchParams();
@@ -64,6 +70,7 @@ export default function Catalog() {
     if (next.viewMode !== 'grid') params.set('view', next.viewMode);
     if (next.sortKey !== 'name') params.set('sort', next.sortKey);
     if (next.sortDir !== 'asc') params.set('dir', next.sortDir);
+    if (next.selectedSlugs.length > 0) params.set('sel', next.selectedSlugs.join(','));
     setSearchParams(params, { replace: true });
   };
 
@@ -74,6 +81,47 @@ export default function Catalog() {
 
   const clearAllFilters = () => {
     updateState({ search: '', category: '', tagFilter: '', showFavoritesOnly: false });
+  };
+
+  const toggleSelected = (slug) => {
+    const next = selectedSlugs.includes(slug)
+      ? selectedSlugs.filter(s => s !== slug)
+      : [...selectedSlugs, slug];
+    updateState({ selectedSlugs: next });
+  };
+
+  const clearSelected = () => updateState({ selectedSlugs: [] });
+
+  const selectVisible = () => {
+    updateState({ selectedSlugs: sorted.map(p => p.slug) });
+  };
+
+  const addSelectedToCompare = () => {
+    if (selectedSlugs.length === 0) {
+      toast.info('Select plugins first');
+      return;
+    }
+    const merged = [...new Set([...getCompareShortlist(), ...selectedSlugs])].slice(0, 4);
+    setCompareShortlist(merged);
+    toast.success(`Prepared comparison for ${merged.length} plugin(s)`);
+    navigate(merged.length ? `/compare?plugins=${merged.join(',')}` : '/compare');
+  };
+
+  const exportSelectedJson = () => {
+    if (selectedSlugs.length === 0) {
+      toast.info('Select plugins first');
+      return;
+    }
+    const selectedData = plugins.filter(p => selectedSlugs.includes(p.slug));
+    const payload = JSON.stringify(selectedData, null, 2);
+    const blob = new Blob([payload], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `catalog-selected-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${selectedData.length} selected plugin(s)`);
   };
 
   const filtered = plugins.filter(p => {
@@ -217,6 +265,14 @@ export default function Catalog() {
         </button>
       </div>
 
+      <div className="catalog-bulk-bar">
+        <span className="catalog-bulk-count">{selectedSlugs.length} selected</span>
+        <button className="btn-secondary" onClick={selectVisible} disabled={sorted.length === 0}>Select visible</button>
+        <button className="btn-secondary" onClick={clearSelected} disabled={selectedSlugs.length === 0}>Clear selection</button>
+        <button className="btn-secondary" onClick={addSelectedToCompare} disabled={selectedSlugs.length === 0}>Compare selected</button>
+        <button className="btn-secondary" onClick={exportSelectedJson} disabled={selectedSlugs.length === 0}>Export selected JSON</button>
+      </div>
+
       <div className="catalog-presets">
         <input
           type="text"
@@ -253,12 +309,25 @@ export default function Catalog() {
         </div>
       ) : viewMode === 'grid' ? (
         <div className="catalog-grid">
-          {sorted.map(p => <PluginCard key={p.slug} plugin={p} />)}
+          {sorted.map(p => (
+            <div key={p.slug} className={`catalog-grid-item${selectedSlugs.includes(p.slug) ? ' catalog-grid-item-selected' : ''}`}>
+              <label className="catalog-select-checkbox">
+                <input
+                  type="checkbox"
+                  checked={selectedSlugs.includes(p.slug)}
+                  onChange={() => toggleSelected(p.slug)}
+                  aria-label={`Select ${p.name}`}
+                />
+              </label>
+              <PluginCard plugin={p} />
+            </div>
+          ))}
         </div>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
+              <th>Select</th>
               <th></th>
               <th>Plugin</th>
               <th>Category</th>
@@ -268,7 +337,15 @@ export default function Catalog() {
           </thead>
           <tbody>
             {sorted.map(p => (
-              <tr key={p.slug}>
+              <tr key={p.slug} className={selectedSlugs.includes(p.slug) ? 'catalog-row-selected' : ''}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedSlugs.includes(p.slug)}
+                    onChange={() => toggleSelected(p.slug)}
+                    aria-label={`Select ${p.name}`}
+                  />
+                </td>
                 <td>{p.icon}</td>
                 <td><Link to={`/plugin/${p.slug}`}>{p.name}</Link></td>
                 <td>{p.category}</td>
