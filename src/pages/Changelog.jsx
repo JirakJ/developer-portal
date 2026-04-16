@@ -2,6 +2,18 @@ import Breadcrumb from '../components/Breadcrumb';
 
 const changelog = [
   {
+    version: '1.8.0',
+    date: '2026-04-16',
+    changes: [
+      'Added shared version intelligence utilities for date-based semantic sorting across catalog, home, releases, and health views',
+      'Releases page now includes Fresh/Aging/Stale filters, freshness badges, and age-in-months indicators',
+      'Release exports (CSV/JSON) now include freshness metadata for portfolio reporting',
+      'Health page now supports configurable SLO threshold, degraded-only filtering, uptime sorting, and degraded report copy',
+      'Settings now includes Health Policy controls to manage and reset degraded uptime threshold',
+      'Updated release metadata and announcement for v1.8.0',
+    ],
+  },
+  {
     version: '1.7.0',
     date: '2026-04-16',
     changes: [

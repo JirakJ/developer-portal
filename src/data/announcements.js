@@ -5,10 +5,10 @@
  */
 const announcements = [
   {
-    id: 'v1.7.0-release',
+    id: 'v1.8.0-release',
     revision: 1,
     severity: 'info',
-    message: 'Developer Portal v1.7.0 is live — catalog bulk actions, compare feature search, install info copy, and settings backup import/export.',
+    message: 'Developer Portal v1.8.0 is live — release freshness insights, health threshold policies, degraded-only workflow, and accurate semantic version sorting.',
     link: '/changelog',
     linkText: 'See changelog',
     publishedAt: '2026-04-16',

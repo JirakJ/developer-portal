@@ -8,6 +8,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { useToast } from '../contexts/ToastContext';
 import { normalizeTag } from '../utils/tags';
 import { getCompareShortlist, setCompareShortlist } from '../utils/compareShortlist';
+import { compareVersions } from '../utils/versioning';
 
 const PRESETS_KEY = 'catalogPresets';
 const MAX_PRESETS = 8;
@@ -138,7 +139,7 @@ export default function Catalog() {
 
   const cmp = {
     name: (a, b) => a.name.localeCompare(b.name),
-    version: (a, b) => a.version.localeCompare(b.version),
+    version: (a, b) => compareVersions(a.version, b.version),
     category: (a, b) => a.category.localeCompare(b.category),
     pricing: (a, b) => a.pricing.localeCompare(b.pricing),
   }[sortKey] || ((a, b) => a.name.localeCompare(b.name));

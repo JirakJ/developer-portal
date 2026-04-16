@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useToast } from '../contexts/ToastContext';
 import { removeItem, getItem, setItem } from '../utils/storage';
+import { getHealthThreshold, persistHealthThreshold, DEFAULT_HEALTH_THRESHOLD } from '../utils/healthPolicy';
 import Breadcrumb from '../components/Breadcrumb';
 
 const themeOptions = [
@@ -20,6 +21,7 @@ export default function Settings() {
   const [recentViewedCount, setRecentViewedCount] = useState(() => getItem('recentViewed', []).length);
   const [compareShortlistCount, setCompareShortlistCount] = useState(() => getItem('compareShortlist', []).length);
   const [presetCount, setPresetCount] = useState(() => getItem('catalogPresets', []).length);
+  const [healthThreshold, setHealthThreshold] = useState(() => getHealthThreshold());
   const importRef = useRef(null);
 
   const refreshCounts = () => {
@@ -30,6 +32,7 @@ export default function Settings() {
     setCompareShortlistCount(Array.isArray(shortlist) ? shortlist.length : 0);
     setPresetCount(Array.isArray(presets) ? presets.length : 0);
     setSidebarDefault(getItem('sidebarCollapsed', false));
+    setHealthThreshold(getHealthThreshold());
   };
 
   const handleSidebarDefault = (val) => {
@@ -79,6 +82,17 @@ export default function Settings() {
     keys.forEach(k => localStorage.removeItem(k));
     refreshCounts();
     toast.success(`Reset ${keys.length} preference(s). Reload for full effect.`);
+  };
+
+  const handleHealthThresholdChange = (value) => {
+    const next = persistHealthThreshold(value);
+    setHealthThreshold(next);
+  };
+
+  const handleHealthThresholdReset = () => {
+    const next = persistHealthThreshold(DEFAULT_HEALTH_THRESHOLD);
+    setHealthThreshold(next);
+    toast.success(`Health threshold reset to ${next}%`);
   };
 
   const handleExportPreferences = () => {
@@ -167,6 +181,35 @@ export default function Settings() {
           >
             <span className="settings-toggle-thumb" />
           </button>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <h2>Health Policy</h2>
+        <p className="settings-desc">Control when plugins are marked as degraded on System Health</p>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Uptime degraded threshold</strong>
+            <p>Plugins below this percentage are shown as degraded</p>
+          </div>
+          <div className="settings-threshold-controls">
+            <span className="settings-threshold-value">{healthThreshold.toFixed(1)}%</span>
+            <input
+              type="range"
+              min="95"
+              max="100"
+              step="0.1"
+              value={healthThreshold}
+              onChange={e => handleHealthThresholdChange(Number(e.target.value))}
+            />
+            <button
+              className="btn-secondary"
+              onClick={handleHealthThresholdReset}
+              disabled={healthThreshold === DEFAULT_HEALTH_THRESHOLD}
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </div>
 

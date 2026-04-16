@@ -2456,6 +2456,82 @@ a:hover { color: #60a5fa; }
 
 /* ── Export Button Group ── */
 .export-btn-group { display: flex; gap: 6px; }
+.release-freshness-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.release-freshness-chip {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+}
+.release-freshness-chip:hover { color: var(--text-primary); border-color: var(--accent); }
+.release-freshness-chip.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.release-freshness-badge {
+  min-width: 62px;
+  justify-content: center;
+}
+.freshness-fresh { background: var(--green-soft); color: var(--green); }
+.freshness-aging { background: var(--orange-soft); color: var(--orange); }
+.freshness-stale { background: var(--red-soft); color: var(--red); }
+.freshness-unknown { background: var(--bg-elevated); color: var(--text-muted); }
+.release-age {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.health-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.health-threshold-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.health-threshold-control input[type="range"] {
+  width: 170px;
+  accent-color: var(--accent);
+}
+
+.settings-threshold-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 320px;
+}
+.settings-threshold-controls input[type="range"] {
+  width: 170px;
+  accent-color: var(--accent);
+}
+.settings-threshold-value {
+  min-width: 56px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
 
 /* ── Tab Panels (all rendered, only active visible on screen) ── */
 .tab-panel { display: none; }
@@ -2469,6 +2545,8 @@ a:hover { color: #60a5fa; }
 [data-theme="light"] .share-btn { background: #fff; border-color: rgba(0,0,0,.1); }
 [data-theme="light"] .catalog-preset-chip { background: #fff; border-color: rgba(0,0,0,.1); }
 [data-theme="light"] .catalog-preset-input { background: #fff; border-color: rgba(0,0,0,.12); }
+[data-theme="light"] .release-freshness-chip { background: #fff; border-color: rgba(0,0,0,.12); }
+[data-theme="light"] .health-threshold-control { background: #fff; border-color: rgba(0,0,0,.12); }
 
 /* ── Print Stylesheet ── */
 @media print {
@@ -2478,7 +2556,7 @@ a:hover { color: #60a5fa; }
   .btn-primary, .btn-secondary, .btn-danger, .btn-logout,
   .export-btn-group, .catalog-toolbar, .view-toggle, .favorites-toggle,
   .catalog-presets, .catalog-bulk-bar, .filter-row, .share-btn, .favorite-btn, .compare-toggle-btn, .install-copy-btn, .detail-tabs,
-  .command-palette-trigger, .compare-selector, .compare-feature-filter, .back-to-top { display: none !important; }
+  .command-palette-trigger, .compare-selector, .compare-feature-filter, .release-freshness-filters, .health-controls, .back-to-top { display: none !important; }
 
   body, html, #root { background: white !important; color: black !important; }
   .app-layout { display: block !important; }
@@ -2575,4 +2653,8 @@ a:hover { color: #60a5fa; }
   .analytics-grid { grid-template-columns: 1fr; }
   .analytics-highlight-row { grid-template-columns: 1fr; }
   .portal-footer { flex-direction: column; gap: 4px; text-align: center; }
+  .health-threshold-control { width: 100%; justify-content: space-between; }
+  .health-threshold-control input[type="range"] { flex: 1; max-width: 220px; }
+  .settings-threshold-controls { width: 100%; min-width: 0; justify-content: flex-end; }
+  .settings-threshold-controls input[type="range"] { flex: 1; max-width: 220px; }
 }

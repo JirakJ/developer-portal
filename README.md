@@ -11,7 +11,8 @@ Internal developer portal for the JetBrains Plugin Suite — a catalog of 33+ ma
 - 📚 **Documentation Hub** — Centralized docs covering development, publishing, and architecture
 - 🔗 **API Reference** — Links to JetBrains Platform SDK, Marketplace API, and internal APIs
 - 📦 **Release Tracker** — Version overview across the entire plugin suite
-- 💚 **System Health** — Compatibility matrix and marketplace status
+- 🧭 **Release Freshness Insights** — Fresh/aging/stale lifecycle visibility with exportable metadata
+- 💚 **System Health** — Threshold-based degraded detection, uptime sorting, and degraded incident copy report
 - ⌨️ **Global Search** — `⌘K` / `Ctrl+K` shortcut for instant fuzzy search
 - ♿ **Accessible** — Skip navigation, focus indicators, screen reader support
 - 📱 **Responsive** — Full mobile layout with hamburger menu

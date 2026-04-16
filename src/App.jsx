@@ -162,7 +162,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
           <footer className="portal-footer">
-            <span>© 2026 Jakub Jirák · Developer Portal v1.7.0</span>
+            <span>© 2026 Jakub Jirák · Developer Portal v1.8.0</span>
             <span>
               <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
                 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>

@@ -5,6 +5,7 @@ import { getTagCloud } from '../utils/tags';
 import { getRecentViewed } from '../utils/recentViewed';
 import { getCompareShortlist } from '../utils/compareShortlist';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { compareVersions } from '../utils/versioning';
 
 const categoryIcons = {
   'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
@@ -65,11 +66,11 @@ export default function Home() {
   []);
 
   const newest = useMemo(() =>
-    [...plugins].sort((a, b) => b.version.localeCompare(a.version))[0],
+    [...plugins].sort((a, b) => compareVersions(b.version, a.version))[0],
   []);
 
   const recentlyUpdated = useMemo(() =>
-    [...plugins].sort((a, b) => b.version.localeCompare(a.version)).slice(0, 8),
+    [...plugins].sort((a, b) => compareVersions(b.version, a.version)).slice(0, 8),
   []);
 
   const tagCloud = useMemo(() => getTagCloud(), []);
