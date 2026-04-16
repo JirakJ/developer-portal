@@ -8,7 +8,8 @@ import { getRecentViewed } from '../utils/recentViewed';
 import { getCompareShortlist, setCompareShortlist } from '../utils/compareShortlist';
 import { getItem, removeItem } from '../utils/storage';
 import { getHealthThreshold } from '../utils/healthPolicy';
-import { clearDismissedAlerts, getDismissedAlerts, getOpenAlerts, getPortfolioAlerts } from '../utils/alerts';
+import { getAlertPolicy } from '../utils/alertsPolicy';
+import { clearDismissedAlerts, getDismissedAlerts, getPortfolioAlerts, summarizeAlerts } from '../utils/alerts';
 
 const pages = [
   { label: 'Home', path: '/', icon: '🏠' },
@@ -53,10 +54,12 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
     const result = [];
     const shortlist = getCompareShortlist();
     const shortlistPath = shortlist.length ? `/compare?plugins=${shortlist.join(',')}` : '/compare';
-    const openAlertsCount = getOpenAlerts(
-      getPortfolioAlerts(plugins, getHealthThreshold()),
+    const alertSummary = summarizeAlerts(
+      getPortfolioAlerts(plugins, getHealthThreshold(), undefined, getAlertPolicy()),
       getDismissedAlerts()
-    ).length;
+    );
+    const openAlertsCount = alertSummary.total;
+    const criticalAlertsCount = alertSummary.critical;
     const dismissedCount = Object.keys(getDismissedAlerts()).length;
     const favoriteSlugs = getItem('favorites', []);
     const favoriteList = Array.isArray(favoriteSlugs) ? favoriteSlugs : [];
@@ -140,6 +143,7 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
       { label: 'Keyboard Shortcuts', icon: '⌨️', action: 'shortcuts', meta: 'Press ?' },
       { label: 'Open Comparison Shortlist', icon: '⚖️', action: 'open-comparison', path: shortlistPath, meta: shortlist.length ? `${shortlist.length} selected` : 'No plugins selected' },
       { label: 'Open Alerts Center', icon: '🚨', action: 'open-alerts', path: '/alerts', meta: openAlertsCount ? `${openAlertsCount} open` : 'No open alerts' },
+      { label: 'Open Critical Alerts', icon: '🔥', action: 'open-critical-alerts', path: '/alerts?severity=critical', meta: criticalAlertsCount ? `${criticalAlertsCount} critical` : 'No critical alerts' },
       { label: 'Clear Dismissed Alerts', icon: '🧼', action: 'clear-dismissed-alerts', meta: dismissedCount ? `${dismissedCount} dismissed` : 'Nothing to clear' },
       { label: 'Clear Recently Viewed', icon: '🧹', action: 'clear-recent', meta: 'Reset recent plugin history' },
       { label: 'Clear Comparison Shortlist', icon: '🗑️', action: 'clear-shortlist', meta: 'Remove all compare selections' },
@@ -185,6 +189,8 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
         navigate(item.path || '/compare');
       } else if (item.action === 'open-alerts') {
         navigate(item.path || '/alerts');
+      } else if (item.action === 'open-critical-alerts') {
+        navigate(item.path || '/alerts?severity=critical');
       } else if (item.action === 'clear-dismissed-alerts') {
         clearDismissedAlerts();
         toast.success('Dismissed alerts cleared');

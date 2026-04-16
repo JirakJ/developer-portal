@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useFavorites } from '../contexts/FavoritesContext';
 import plugins from '../data/plugins';
-import { getHealthThreshold } from '../utils/healthPolicy';
+import { getHealthThreshold, HEALTH_POLICY_UPDATED_EVENT } from '../utils/healthPolicy';
+import { getAlertPolicy, ALERTS_POLICY_UPDATED_EVENT } from '../utils/alertsPolicy';
 import { generatePortfolioUptime } from '../utils/uptime';
-import { ALERTS_UPDATED_EVENT, getDismissedAlerts, getOpenAlerts, getPortfolioAlerts } from '../utils/alerts';
+import { ALERTS_UPDATED_EVENT, getDismissedAlerts, getPortfolioAlerts, summarizeAlerts } from '../utils/alerts';
 
 /* SVG icon components — clean, monochrome, Lucide-style */
 const icons = {
@@ -43,16 +44,26 @@ const expandIcon = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" s
 export default function Sidebar({ open, onNavigate, collapsed, onToggleCollapse }) {
   const { count: favCount } = useFavorites();
   const [openAlertCount, setOpenAlertCount] = useState(0);
+  const [criticalAlertCount, setCriticalAlertCount] = useState(0);
 
   useEffect(() => {
     const handleAlertsUpdate = () => {
       const threshold = getHealthThreshold();
-      const alerts = getPortfolioAlerts(plugins, threshold, generatePortfolioUptime(plugins));
-      setOpenAlertCount(getOpenAlerts(alerts, getDismissedAlerts()).length);
+      const policy = getAlertPolicy();
+      const alerts = getPortfolioAlerts(plugins, threshold, generatePortfolioUptime(plugins), policy);
+      const summary = summarizeAlerts(alerts, getDismissedAlerts());
+      setOpenAlertCount(summary.total);
+      setCriticalAlertCount(summary.critical);
     };
     handleAlertsUpdate();
     window.addEventListener(ALERTS_UPDATED_EVENT, handleAlertsUpdate);
-    return () => window.removeEventListener(ALERTS_UPDATED_EVENT, handleAlertsUpdate);
+    window.addEventListener(HEALTH_POLICY_UPDATED_EVENT, handleAlertsUpdate);
+    window.addEventListener(ALERTS_POLICY_UPDATED_EVENT, handleAlertsUpdate);
+    return () => {
+      window.removeEventListener(ALERTS_UPDATED_EVENT, handleAlertsUpdate);
+      window.removeEventListener(HEALTH_POLICY_UPDATED_EVENT, handleAlertsUpdate);
+      window.removeEventListener(ALERTS_POLICY_UPDATED_EVENT, handleAlertsUpdate);
+    };
   }, []);
 
   return (
@@ -89,7 +100,11 @@ export default function Sidebar({ open, onNavigate, collapsed, onToggleCollapse 
                 <span className="sidebar-icon">{item.icon}</span>
                 {!collapsed && <span>{item.label}</span>}
                 {!collapsed && item.to === '/catalog' && favCount > 0 && <span className="sidebar-badge">{favCount}</span>}
-                {!collapsed && item.to === '/alerts' && openAlertCount > 0 && <span className="sidebar-badge sidebar-badge-alert">{openAlertCount}</span>}
+                {!collapsed && item.to === '/alerts' && openAlertCount > 0 && (
+                  <span className={`sidebar-badge sidebar-badge-alert${criticalAlertCount > 0 ? ' critical' : ''}`}>
+                    {openAlertCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>

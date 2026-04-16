@@ -2,6 +2,20 @@ import Breadcrumb from '../components/Breadcrumb';
 
 const changelog = [
   {
+    version: '1.10.0',
+    date: '2026-04-16',
+    changes: [
+      'Added configurable alert policy engine (release age thresholds and health critical delta) used across incident generation',
+      'Added global critical incident banner in app shell with direct deep-link to critical alerts',
+      'Upgraded Alerts Center with alert-type filters, visible bulk dismiss/restore actions, and JSON export',
+      'Alerts Center now displays active policy snapshot and release/health incident split',
+      'Settings now includes advanced alert policy controls with default reset workflow',
+      'Sidebar alert badge now reflects severity state and updates with policy changes',
+      'Command palette now includes quick navigation to critical alerts',
+      'Updated release metadata and announcement for v1.10.0',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-04-16',
     changes: [

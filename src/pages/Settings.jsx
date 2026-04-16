@@ -4,6 +4,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { useToast } from '../contexts/ToastContext';
 import { removeItem, getItem, setItem } from '../utils/storage';
 import { getHealthThreshold, persistHealthThreshold, DEFAULT_HEALTH_THRESHOLD } from '../utils/healthPolicy';
+import { getAlertPolicy, persistAlertPolicy, resetAlertPolicy, DEFAULT_ALERT_POLICY } from '../utils/alertsPolicy';
 import { clearDismissedAlerts, getDismissedAlerts } from '../utils/alerts';
 import Breadcrumb from '../components/Breadcrumb';
 
@@ -24,6 +25,7 @@ export default function Settings() {
   const [presetCount, setPresetCount] = useState(() => getItem('catalogPresets', []).length);
   const [dismissedAlertCount, setDismissedAlertCount] = useState(() => Object.keys(getDismissedAlerts()).length);
   const [healthThreshold, setHealthThreshold] = useState(() => getHealthThreshold());
+  const [alertPolicy, setAlertPolicy] = useState(() => getAlertPolicy());
   const importRef = useRef(null);
 
   const refreshCounts = () => {
@@ -36,6 +38,7 @@ export default function Settings() {
     setSidebarDefault(getItem('sidebarCollapsed', false));
     setDismissedAlertCount(Object.keys(getDismissedAlerts()).length);
     setHealthThreshold(getHealthThreshold());
+    setAlertPolicy(getAlertPolicy());
   };
 
   const handleSidebarDefault = (val) => {
@@ -106,6 +109,17 @@ export default function Settings() {
     const next = persistHealthThreshold(DEFAULT_HEALTH_THRESHOLD);
     setHealthThreshold(next);
     toast.success(`Health threshold reset to ${next}%`);
+  };
+
+  const handleAlertPolicyChange = (partial) => {
+    const next = persistAlertPolicy(partial);
+    setAlertPolicy(next);
+  };
+
+  const handleAlertPolicyReset = () => {
+    const next = resetAlertPolicy();
+    setAlertPolicy(next);
+    toast.success('Alert policy reset to defaults');
   };
 
   const handleExportPreferences = () => {
@@ -221,6 +235,68 @@ export default function Settings() {
               disabled={healthThreshold === DEFAULT_HEALTH_THRESHOLD}
             >
               Reset
+            </button>
+          </div>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Release alert minimum age</strong>
+            <p>Create release alerts when version age reaches this month threshold</p>
+          </div>
+          <div className="settings-threshold-controls">
+            <span className="settings-threshold-value">{alertPolicy.releaseMinAgeMonths} mo</span>
+            <input
+              type="range"
+              min="3"
+              max="24"
+              step="1"
+              value={alertPolicy.releaseMinAgeMonths}
+              onChange={e => handleAlertPolicyChange({ releaseMinAgeMonths: Number(e.target.value) })}
+            />
+          </div>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Release critical age</strong>
+            <p>Stale releases at or above this age are marked critical</p>
+          </div>
+          <div className="settings-threshold-controls">
+            <span className="settings-threshold-value">{alertPolicy.releaseCriticalAgeMonths} mo</span>
+            <input
+              type="range"
+              min={Math.max(4, alertPolicy.releaseMinAgeMonths + 1)}
+              max="36"
+              step="1"
+              value={alertPolicy.releaseCriticalAgeMonths}
+              onChange={e => handleAlertPolicyChange({ releaseCriticalAgeMonths: Number(e.target.value) })}
+            />
+          </div>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Health critical delta</strong>
+            <p>Uptime gap below threshold required to escalate warning to critical</p>
+          </div>
+          <div className="settings-threshold-controls">
+            <span className="settings-threshold-value">{alertPolicy.healthCriticalDelta.toFixed(1)}%</span>
+            <input
+              type="range"
+              min="0.2"
+              max="3"
+              step="0.1"
+              value={alertPolicy.healthCriticalDelta}
+              onChange={e => handleAlertPolicyChange({ healthCriticalDelta: Number(e.target.value) })}
+            />
+            <button
+              className="btn-secondary"
+              onClick={handleAlertPolicyReset}
+              disabled={
+                alertPolicy.releaseMinAgeMonths === DEFAULT_ALERT_POLICY.releaseMinAgeMonths &&
+                alertPolicy.releaseCriticalAgeMonths === DEFAULT_ALERT_POLICY.releaseCriticalAgeMonths &&
+                alertPolicy.healthCriticalDelta === DEFAULT_ALERT_POLICY.healthCriticalDelta
+              }
+            >
+              Reset policy
             </button>
           </div>
         </div>

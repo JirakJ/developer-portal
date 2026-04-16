@@ -14,6 +14,7 @@ Internal developer portal for the JetBrains Plugin Suite — a catalog of 33+ ma
 - 🧭 **Release Freshness Insights** — Fresh/aging/stale lifecycle visibility with exportable metadata
 - 💚 **System Health** — Threshold-based degraded detection, uptime sorting, and degraded incident copy report
 - 🚨 **Alerts Center** — Unified stale-release and uptime incident feed with dismiss/restore workflow
+- 🧯 **Alert Policy Controls** — Tune incident thresholds and escalation levels directly in Settings
 - ⌨️ **Global Search** — `⌘K` / `Ctrl+K` shortcut for instant fuzzy search
 - ♿ **Accessible** — Skip navigation, focus indicators, screen reader support
 - 📱 **Responsive** — Full mobile layout with hamburger menu

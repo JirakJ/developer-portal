@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import plugins from '../data/plugins';
 import { useToast } from '../contexts/ToastContext';
@@ -24,10 +24,10 @@ export default function Releases() {
   const [sortKey, setSortKey] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
   const [filters, setFilters] = useState({ name: '', version: '', category: '' });
-  const [freshness, setFreshness] = useState(() => {
+  const freshness = useMemo(() => {
     const filter = searchParams.get('freshness');
     return FRESHNESS_OPTIONS.some(option => option.value === filter) ? filter : 'all';
-  });
+  }, [searchParams]);
 
   const freshnessMeta = useMemo(() => {
     const map = {};
@@ -88,7 +88,6 @@ export default function Releases() {
   };
 
   const updateFreshness = (value) => {
-    setFreshness(value);
     const next = new URLSearchParams(searchParams);
     if (value === 'all') next.delete('freshness');
     else next.set('freshness', value);

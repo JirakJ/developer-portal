@@ -297,6 +297,9 @@ a:hover { color: #60a5fa; }
   line-height: 1.5;
 }
 .sidebar-badge-alert {
+  background: var(--orange);
+}
+.sidebar-badge-alert.critical {
   background: var(--red);
 }
 
@@ -2419,6 +2422,29 @@ a:hover { color: #60a5fa; }
   transition: opacity .15s;
 }
 .announcement-dismiss:hover { opacity: 1; }
+.critical-alerts-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 20px;
+  background: var(--red-soft);
+  color: var(--red);
+  border-bottom: 1px solid rgba(239,68,68,.18);
+  font-size: 13px;
+}
+.critical-alerts-banner-text {
+  font-weight: 600;
+}
+.critical-alerts-banner-link {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 600;
+}
+.critical-alerts-banner-link:hover {
+  color: inherit;
+  opacity: 0.85;
+}
 
 /* ── Share Button ── */
 .share-btn {
@@ -2521,6 +2547,24 @@ a:hover { color: #60a5fa; }
   font-size: 11px;
   color: var(--text-muted);
 }
+.alerts-policy-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.alerts-policy-inline span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.alerts-type {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
 .alert-severity-critical {
   background: var(--red-soft);
   color: var(--red);
@@ -2534,7 +2578,9 @@ a:hover { color: #60a5fa; }
   color: var(--blue);
 }
 [data-theme="light"] .stat-card-link { border-color: rgba(0,0,0,.08); }
-[data-theme="light"] .sidebar-badge-alert { background: #dc2626; }
+[data-theme="light"] .sidebar-badge-alert { background: #d97706; }
+[data-theme="light"] .sidebar-badge-alert.critical { background: #dc2626; }
+[data-theme="light"] .critical-alerts-banner { background: rgba(239,68,68,.08); }
 
 .health-controls {
   display: flex;
@@ -2596,11 +2642,11 @@ a:hover { color: #60a5fa; }
 @media print {
   .sidebar, .header, .portal-footer, .back-to-top, .toast-container,
   .command-palette-overlay, .sidebar-overlay, .mobile-menu-btn,
-  .skip-link, .announcement-banner, .progress-bar,
+  .skip-link, .announcement-banner, .critical-alerts-banner, .progress-bar,
   .btn-primary, .btn-secondary, .btn-danger, .btn-logout,
   .export-btn-group, .catalog-toolbar, .view-toggle, .favorites-toggle,
   .catalog-presets, .catalog-bulk-bar, .filter-row, .share-btn, .favorite-btn, .compare-toggle-btn, .install-copy-btn, .detail-tabs,
-  .command-palette-trigger, .compare-selector, .compare-feature-filter, .release-freshness-filters, .health-controls, .alerts-filters, .back-to-top { display: none !important; }
+  .command-palette-trigger, .compare-selector, .compare-feature-filter, .release-freshness-filters, .health-controls, .alerts-filters, .alerts-policy-inline, .back-to-top { display: none !important; }
 
   body, html, #root { background: white !important; color: black !important; }
   .app-layout { display: block !important; }

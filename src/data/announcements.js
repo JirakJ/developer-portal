@@ -5,10 +5,10 @@
  */
 const announcements = [
   {
-    id: 'v1.9.0-release',
+    id: 'v1.10.0-release',
     revision: 1,
     severity: 'info',
-    message: 'Developer Portal v1.9.0 is live — Alerts Center, operational pulse dashboard, and unified incident dismissal workflows.',
+    message: 'Developer Portal v1.10.0 is live — configurable alert policy engine, global critical incident banner, and advanced alert center workflows.',
     link: '/changelog',
     linkText: 'See changelog',
     publishedAt: '2026-04-16',

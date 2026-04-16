@@ -1,6 +1,7 @@
 import { getReleaseFreshness } from './versioning';
 import { generatePortfolioUptime, isUptimeDegraded } from './uptime';
 import { getItem, removeItem, setItem } from './storage';
+import { getAlertPolicy } from './alertsPolicy';
 
 export const ALERTS_DISMISS_KEY = 'dismissedAlerts';
 export const ALERTS_UPDATED_EVENT = 'dp:alerts-updated';
@@ -11,10 +12,10 @@ const SEVERITY_RANK = {
   info: 2,
 };
 
-function buildReleaseAlert(plugin, freshness) {
-  if (freshness.key !== 'stale') return null;
+function buildReleaseAlert(plugin, freshness, policy) {
+  if (freshness.ageMonths == null || freshness.ageMonths < policy.releaseMinAgeMonths) return null;
   const ageMonths = freshness.ageMonths ?? 0;
-  const severity = ageMonths >= 9 ? 'critical' : 'warning';
+  const severity = ageMonths >= policy.releaseCriticalAgeMonths ? 'critical' : 'warning';
   return {
     id: `release-stale:${plugin.slug}:${plugin.version}`,
     revision: 1,
@@ -31,14 +32,14 @@ function buildReleaseAlert(plugin, freshness) {
   };
 }
 
-function buildHealthAlert(plugin, pct, threshold) {
+function buildHealthAlert(plugin, pct, threshold, policy) {
   if (!isUptimeDegraded(pct, threshold)) return null;
   const delta = threshold - Number.parseFloat(pct);
   return {
     id: `health-degraded:${plugin.slug}:${threshold.toFixed(1)}`,
     revision: 1,
     type: 'health-degraded',
-    severity: delta >= 1 ? 'critical' : 'warning',
+    severity: delta >= policy.healthCriticalDelta ? 'critical' : 'warning',
     pluginSlug: plugin.slug,
     pluginName: plugin.name,
     pluginIcon: plugin.icon,
@@ -51,19 +52,20 @@ function buildHealthAlert(plugin, pct, threshold) {
   };
 }
 
-export function getPortfolioAlerts(pluginList, threshold, uptimeMap) {
+export function getPortfolioAlerts(pluginList, threshold, uptimeMap, policyInput) {
   const plugins = pluginList || [];
   const uptimeData = uptimeMap || generatePortfolioUptime(plugins);
+  const policy = policyInput || getAlertPolicy();
   const alerts = [];
 
   plugins.forEach(plugin => {
     const freshness = getReleaseFreshness(plugin.version);
-    const releaseAlert = buildReleaseAlert(plugin, freshness);
+    const releaseAlert = buildReleaseAlert(plugin, freshness, policy);
     if (releaseAlert) alerts.push(releaseAlert);
 
     const uptime = uptimeData[plugin.slug];
     if (uptime?.pct) {
-      const healthAlert = buildHealthAlert(plugin, uptime.pct, threshold);
+      const healthAlert = buildHealthAlert(plugin, uptime.pct, threshold, policy);
       if (healthAlert) alerts.push(healthAlert);
     }
   });
@@ -82,6 +84,24 @@ export function getOpenAlerts(alerts, dismissedMap) {
     const revision = dismissed[alert.id];
     return !(typeof revision === 'number' && revision >= alert.revision);
   });
+}
+
+export function summarizeAlerts(alerts, dismissedMap) {
+  const open = getOpenAlerts(alerts, dismissedMap);
+  const summary = {
+    total: open.length,
+    critical: 0,
+    warning: 0,
+    releaseStale: 0,
+    healthDegraded: 0,
+  };
+  open.forEach(alert => {
+    if (alert.severity === 'critical') summary.critical += 1;
+    if (alert.severity === 'warning') summary.warning += 1;
+    if (alert.type === 'release-stale') summary.releaseStale += 1;
+    if (alert.type === 'health-degraded') summary.healthDegraded += 1;
+  });
+  return summary;
 }
 
 function emitAlertsUpdated() {

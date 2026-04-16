@@ -7,7 +7,8 @@ import { getCompareShortlist } from '../utils/compareShortlist';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { compareVersions } from '../utils/versioning';
 import { getHealthThreshold } from '../utils/healthPolicy';
-import { getDismissedAlerts, getOpenAlerts, getPortfolioAlerts } from '../utils/alerts';
+import { getAlertPolicy } from '../utils/alertsPolicy';
+import { getDismissedAlerts, getPortfolioAlerts, summarizeAlerts } from '../utils/alerts';
 
 const categoryIcons = {
   'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
@@ -87,14 +88,11 @@ export default function Home() {
     return getCompareShortlist().map(slug => plugins.find(p => p.slug === slug)).filter(Boolean).slice(0, 4);
   }, []);
   const healthThreshold = useMemo(() => getHealthThreshold(), []);
-  const openAlerts = useMemo(() => {
-    const allAlerts = getPortfolioAlerts(plugins, healthThreshold);
-    return getOpenAlerts(allAlerts, getDismissedAlerts());
-  }, [healthThreshold]);
-  const criticalAlerts = openAlerts.filter(alert => alert.severity === 'critical').length;
-  const warningAlerts = openAlerts.filter(alert => alert.severity === 'warning').length;
-  const staleAlerts = openAlerts.filter(alert => alert.type === 'release-stale').length;
-  const degradedAlerts = openAlerts.filter(alert => alert.type === 'health-degraded').length;
+  const alertPolicy = useMemo(() => getAlertPolicy(), []);
+  const alertSummary = useMemo(() => {
+    const allAlerts = getPortfolioAlerts(plugins, healthThreshold, undefined, alertPolicy);
+    return summarizeAlerts(allAlerts, getDismissedAlerts());
+  }, [healthThreshold, alertPolicy]);
 
   return (
     <div className="page">
@@ -162,23 +160,23 @@ export default function Home() {
         <div className="stats-grid">
           <Link to="/alerts?status=open" className="stat-card stat-card-link">
             <div className="stat-label">Open Alerts</div>
-            <div className="stat-value">{openAlerts.length}</div>
+            <div className="stat-value">{alertSummary.total}</div>
           </Link>
           <Link to="/alerts?status=open&severity=critical" className="stat-card stat-card-link">
             <div className="stat-label">Critical Alerts</div>
-            <div className="stat-value">{criticalAlerts}</div>
+            <div className="stat-value">{alertSummary.critical}</div>
           </Link>
-          <Link to="/health" className="stat-card stat-card-link">
+          <Link to="/alerts?type=health-degraded" className="stat-card stat-card-link">
             <div className="stat-label">Degraded Uptime Alerts</div>
-            <div className="stat-value">{degradedAlerts}</div>
+            <div className="stat-value">{alertSummary.healthDegraded}</div>
           </Link>
-          <Link to="/releases?freshness=stale" className="stat-card stat-card-link">
+          <Link to="/alerts?type=release-stale" className="stat-card stat-card-link">
             <div className="stat-label">Stale Release Alerts</div>
-            <div className="stat-value">{staleAlerts}</div>
+            <div className="stat-value">{alertSummary.releaseStale}</div>
           </Link>
           <Link to="/alerts?status=open&severity=warning" className="stat-card stat-card-link">
             <div className="stat-label">Warning Alerts</div>
-            <div className="stat-value">{warningAlerts}</div>
+            <div className="stat-value">{alertSummary.warning}</div>
           </Link>
           <Link to="/settings" className="stat-card stat-card-link">
             <div className="stat-label">Health Threshold</div>
