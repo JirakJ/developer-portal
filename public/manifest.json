@@ -1,0 +1,13 @@
+{
+  "name": "Developer Portal",
+  "short_name": "DevPortal",
+  "description": "Central developer portal for JetBrains Marketplace plugins by Ing. Jakub Jirák",
+  "start_url": "/developer-portal/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icons.svg", "sizes": "192x192", "type": "image/svg+xml" }
+  ]
+}

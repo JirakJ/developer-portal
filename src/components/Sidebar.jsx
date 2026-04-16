@@ -23,9 +23,9 @@ const navItems = [
   ]},
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ open, onClose }) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${open ? ' sidebar-open' : ''}`}>
       <div className="sidebar-brand">
         <div className="sidebar-logo">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">

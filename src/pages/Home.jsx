@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <div className="page">
-      <div className="home-hero">
+      <div className="hero">
         <h1>JetBrains Plugin Suite</h1>
         <p>Central hub for {plugins.length} plugins across {categories.length} categories — from GPU acceleration to security scanning.</p>
         <div className="home-hero-actions">
