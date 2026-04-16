@@ -3,10 +3,14 @@ import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import ErrorBoundary from './components/ErrorBoundary';
+import ProgressBar from './components/ProgressBar';
 import { ToastProvider } from './contexts/ToastContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
 import ShortcutsModal from './components/ShortcutsModal';
 import BackToTop from './components/BackToTop';
 import useGlobalKeys from './hooks/useGlobalKeys';
+import { getItem, setItem } from './utils/storage';
 
 const Login = lazy(() => import('./pages/Login'));
 const Home = lazy(() => import('./pages/Home'));
@@ -24,10 +28,13 @@ const STORAGE_KEY = 'dp_user';
 
 function PageLoader() {
   return (
-    <div className="page-loader" role="status" aria-label="Loading page">
-      <div className="loader-spinner" />
-      <span>Loading…</span>
-    </div>
+    <>
+      <ProgressBar />
+      <div className="page-loader" role="status" aria-label="Loading page">
+        <div className="loader-spinner" />
+        <span>Loading…</span>
+      </div>
+    </>
   );
 }
 
@@ -68,12 +75,21 @@ export default function App() {
     } catch { return null; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => getItem('sidebarCollapsed', false));
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   // Close mobile sidebar on navigation
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+
+  const toggleCollapse = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      setItem('sidebarCollapsed', next);
+      return next;
+    });
+  };
 
   // Global keyboard shortcuts (? for help, G-then-X for nav)
   const keyMap = useMemo(() => ({
@@ -101,6 +117,8 @@ export default function App() {
   }
 
   return (
+    <ThemeProvider>
+    <FavoritesProvider>
     <ToastProvider>
       <div className="app-layout">
         <a href="#main-content" className="skip-link">Skip to content</a>
@@ -109,7 +127,7 @@ export default function App() {
           <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
         )}
 
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={sidebarCollapsed} onToggleCollapse={toggleCollapse} />
 
         <div className="main-content">
           <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} />
@@ -135,7 +153,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
           <footer className="portal-footer">
-            <span>© 2026 Jakub Jirák · Developer Portal v1.1.0</span>
+            <span>© 2026 Jakub Jirák · Developer Portal v1.2.0</span>
             <span>
               <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
                 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
@@ -148,5 +166,7 @@ export default function App() {
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </div>
     </ToastProvider>
+    </FavoritesProvider>
+    </ThemeProvider>
   );
 }

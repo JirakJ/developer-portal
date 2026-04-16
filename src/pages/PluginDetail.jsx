@@ -1,5 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import plugins from '../data/plugins';
+import FavoriteButton from '../components/FavoriteButton';
+import { getRelatedPlugins } from '../utils/tags';
 
 export default function PluginDetail() {
   const { slug } = useParams();
@@ -17,6 +19,7 @@ export default function PluginDetail() {
     );
   }
 
+  const related = getRelatedPlugins(slug, 4);
   const marketplaceUrl = `https://plugins.jetbrains.com/plugin/${plugin.id}-${plugin.slug}`;
 
   return (
@@ -30,7 +33,7 @@ export default function PluginDetail() {
       <div className="plugin-detail">
         <div className="plugin-detail-header">
           <span className="plugin-detail-icon">{plugin.icon}</span>
-          <div>
+          <div style={{flex:1}}>
             <h1>{plugin.name}</h1>
             <div className="plugin-detail-meta">
               <span className="badge">{plugin.category}</span>
@@ -38,6 +41,7 @@ export default function PluginDetail() {
               <span className="plugin-version">v{plugin.version}</span>
             </div>
           </div>
+          <FavoriteButton slug={plugin.slug} size={22} />
         </div>
 
         <p className="plugin-detail-desc">{plugin.description}</p>
@@ -73,6 +77,23 @@ export default function PluginDetail() {
             </a>
           </div>
         </div>
+
+        {related.length > 0 && (
+          <div className="plugin-detail-section">
+            <h2>Related Plugins</h2>
+            <div className="related-grid">
+              {related.map(r => (
+                <Link to={`/plugin/${r.slug}`} key={r.slug} className="related-card">
+                  <span className="related-icon">{r.icon}</span>
+                  <div>
+                    <div className="related-name">{r.name}</div>
+                    <div className="related-cat">{r.category}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

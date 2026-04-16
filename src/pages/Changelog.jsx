@@ -1,5 +1,23 @@
 const changelog = [
   {
+    version: '1.2.0',
+    date: '2026-04-16',
+    changes: [
+      'Added dark/light/system theme toggle with flash-free sync',
+      'Added collapsible sidebar with icon-only mode',
+      'Added plugin favorites/bookmarks with persistence',
+      'Added tag cloud on Home page for browsing by tag',
+      'Added related plugins section on plugin detail pages',
+      'Added CSV export on Releases page',
+      'Added search history (last 5 recent queries)',
+      'Added NProgress-style loading bar for route transitions',
+      'Added favorites toggle filter in Catalog',
+      'Added tag filter support in Catalog URL (?tag=X)',
+      'Improved PluginCard and PluginDetail with favorite buttons',
+      'Sidebar shows favorites badge count on Catalog nav item',
+    ],
+  },
+  {
     version: '1.1.0',
     date: '2026-04-16',
     changes: [

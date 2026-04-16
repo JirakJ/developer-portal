@@ -3,16 +3,23 @@ import { useSearchParams, Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import PluginCard from '../components/PluginCard';
 import { getItem, setItem } from '../utils/storage';
+import { useFavorites } from '../contexts/FavoritesContext';
+import { normalizeTag } from '../utils/tags';
 
 export default function Catalog() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(searchParams.get('category') || '');
+  const [tagFilter, setTagFilter] = useState(searchParams.get('tag') || '');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [viewMode, setViewMode] = useState(() => getItem('catalogView', 'grid'));
+  const { isFavorite } = useFavorites();
 
   useEffect(() => {
     const cat = searchParams.get('category');
+    const tag = searchParams.get('tag');
     if (cat) setCategory(cat);
+    if (tag) setTagFilter(tag);
   }, [searchParams]);
 
   const changeView = (mode) => {
@@ -28,9 +35,11 @@ export default function Catalog() {
         p.description.toLowerCase().includes(q) ||
         p.tags.some(t => t.includes(q));
       const matchCategory = !category || p.category === category;
-      return matchSearch && matchCategory;
+      const matchTag = !tagFilter || p.tags.some(t => normalizeTag(t) === normalizeTag(tagFilter));
+      const matchFav = !showFavoritesOnly || isFavorite(p.slug);
+      return matchSearch && matchCategory && matchTag && matchFav;
     });
-  }, [search, category]);
+  }, [search, category, tagFilter, showFavoritesOnly, isFavorite]);
 
   return (
     <div className="page">
@@ -55,6 +64,16 @@ export default function Catalog() {
           <option value="">All categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
+        {tagFilter && (
+          <span className="active-filter">
+            Tag: {tagFilter}
+            <button className="filter-clear" onClick={() => setTagFilter('')} aria-label="Clear tag filter">×</button>
+          </span>
+        )}
+        <label className="favorites-toggle">
+          <input type="checkbox" checked={showFavoritesOnly} onChange={e => setShowFavoritesOnly(e.target.checked)} />
+          <span>★ Favorites</span>
+        </label>
         <div className="view-toggle">
           <button
             className={viewMode === 'grid' ? 'active' : ''}
@@ -76,8 +95,8 @@ export default function Catalog() {
           <div className="empty-state-icon">🔍</div>
           <h3>No plugins found</h3>
           <p>Try adjusting your search or filter to find what you're looking for.</p>
-          {(search || category) && (
-            <button className="btn-secondary" onClick={() => { setSearch(''); setCategory(''); }}>
+          {(search || category || tagFilter || showFavoritesOnly) && (
+            <button className="btn-secondary" onClick={() => { setSearch(''); setCategory(''); setTagFilter(''); setShowFavoritesOnly(false); }}>
               Clear filters
             </button>
           )}

@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import plugins from '../data/plugins';
+import ThemeToggle from './ThemeToggle';
+import { getItem, setItem } from '../utils/storage';
+
+const MAX_RECENT = 5;
+const RECENT_KEY = 'recentSearches';
 
 const routeTitles = {
   '/': 'Home',
@@ -28,6 +33,10 @@ export default function Header({ user, onLogout, onMenuToggle }) {
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    const stored = getItem(RECENT_KEY, []);
+    return Array.isArray(stored) ? stored.slice(0, MAX_RECENT) : [];
+  });
   const inputRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -75,18 +84,46 @@ export default function Header({ user, onLogout, onMenuToggle }) {
     return () => document.removeEventListener('keydown', handler);
   }, []);
 
-  const goTo = useCallback((slug) => {
+  const goTo = useCallback((slug, searchQuery) => {
+    // Save to recent searches if a meaningful query was used
+    if (searchQuery && searchQuery.trim().length >= 2) {
+      const normalized = searchQuery.trim().toLowerCase();
+      setRecentSearches(prev => {
+        const deduped = prev.filter(s => s.toLowerCase() !== normalized);
+        const next = [searchQuery.trim(), ...deduped].slice(0, MAX_RECENT);
+        setItem(RECENT_KEY, next);
+        return next;
+      });
+    }
     navigate(`/plugin/${slug}`);
     setQuery('');
     setShowResults(false);
     inputRef.current?.blur();
   }, [navigate]);
 
+  const clearRecent = useCallback((idx) => {
+    if (idx === undefined) {
+      setRecentSearches([]);
+      setItem(RECENT_KEY, []);
+    } else {
+      setRecentSearches(prev => {
+        const next = prev.filter((_, i) => i !== idx);
+        setItem(RECENT_KEY, next);
+        return next;
+      });
+    }
+  }, []);
+
+  const applyRecent = useCallback((term) => {
+    setQuery(term);
+    setShowResults(true);
+  }, []);
+
   const handleKeyDown = (e) => {
     if (!showResults || results.length === 0) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, results.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
-    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); goTo(results[activeIdx].slug); }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); goTo(results[activeIdx].slug, query); }
   };
 
   return (
@@ -108,11 +145,11 @@ export default function Header({ user, onLogout, onMenuToggle }) {
             placeholder={`Search… ${shortcutLabel}`}
             value={query}
             onChange={e => { setQuery(e.target.value); setShowResults(true); }}
-            onFocus={() => query && setShowResults(true)}
+            onFocus={() => setShowResults(true)}
             onKeyDown={handleKeyDown}
             className="header-search-input"
             aria-label="Search plugins"
-            aria-expanded={showResults && results.length > 0}
+            aria-expanded={showResults && (results.length > 0 || recentSearches.length > 0)}
             role="combobox"
             aria-autocomplete="list"
           />
@@ -123,7 +160,7 @@ export default function Header({ user, onLogout, onMenuToggle }) {
                 <button
                   key={p.slug}
                   className={`search-result${i === activeIdx ? ' active' : ''}`}
-                  onClick={() => goTo(p.slug)}
+                  onClick={() => goTo(p.slug, query)}
                   role="option"
                   aria-selected={i === activeIdx}
                 >
@@ -136,12 +173,29 @@ export default function Header({ user, onLogout, onMenuToggle }) {
               ))}
             </div>
           )}
+          {showResults && !query && recentSearches.length > 0 && (
+            <div className="search-dropdown">
+              <div className="search-recent-header">
+                <span>Recent</span>
+                <button className="search-recent-clear" onClick={() => clearRecent()}>Clear all</button>
+              </div>
+              {recentSearches.map((term, i) => (
+                <div key={i} className="search-recent-item">
+                  <button className="search-recent-term" onClick={() => applyRecent(term)}>
+                    🕐 {term}
+                  </button>
+                  <button className="search-recent-remove" onClick={() => clearRecent(i)} aria-label={`Remove "${term}"`}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
           {showResults && query && results.length === 0 && (
             <div className="search-dropdown">
               <div className="search-empty">No plugins found for "{query}"</div>
             </div>
           )}
         </div>
+        <ThemeToggle />
         <div className="header-user">
           <div className="header-avatar">
             {user?.avatar_url

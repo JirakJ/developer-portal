@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
+import FavoriteButton from './FavoriteButton';
 
 export default function PluginCard({ plugin }) {
   return (
     <Link to={`/plugin/${plugin.slug}`} className="plugin-card" style={{textDecoration:'none',color:'inherit'}}>
       <div className="plugin-card-header">
         <span className="plugin-icon">{plugin.icon}</span>
-        <div>
+        <div style={{flex:1}}>
           <h3>{plugin.name}</h3>
           <span className="plugin-version">v{plugin.version}</span>
         </div>
+        <FavoriteButton slug={plugin.slug} size={16} />
       </div>
       <p className="plugin-desc">{plugin.description}</p>
       <div className="plugin-tags">

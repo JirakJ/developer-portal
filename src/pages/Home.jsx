@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
+import { getTagCloud } from '../utils/tags';
 
 const categoryIcons = {
   'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
@@ -17,6 +18,8 @@ export default function Home() {
   const recentlyUpdated = useMemo(() =>
     [...plugins].sort((a, b) => b.version.localeCompare(a.version)).slice(0, 8),
   []);
+
+  const tagCloud = useMemo(() => getTagCloud(), []);
 
   return (
     <div className="page">
@@ -63,6 +66,22 @@ export default function Home() {
               </Link>
             );
           })}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2>Tags</h2>
+        <div className="tag-cloud">
+          {tagCloud.map(({ tag, count }) => (
+            <Link
+              key={tag}
+              to={`/catalog?tag=${encodeURIComponent(tag)}`}
+              className="tag-cloud-item"
+              style={{ fontSize: `${Math.min(11 + count * 1.5, 18)}px` }}
+            >
+              {tag} <span className="tag-count">{count}</span>
+            </Link>
+          ))}
         </div>
       </div>
 

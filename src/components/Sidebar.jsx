@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router-dom';
+import { useFavorites } from '../contexts/FavoritesContext';
+import { getItem, setItem } from '../utils/storage';
 
 /* SVG icon components — clean, monochrome, Lucide-style */
 const icons = {
@@ -27,9 +29,13 @@ const navItems = [
   ]},
 ];
 
-export default function Sidebar({ open, onClose }) {
+const collapseIcon = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>;
+const expandIcon = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>;
+
+export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) {
+  const { count: favCount } = useFavorites();
   return (
-    <aside className={`sidebar${open ? ' sidebar-open' : ''}`}>
+    <aside className={`sidebar${open ? ' sidebar-open' : ''}${collapsed ? ' sidebar-collapsed' : ''}`}>
       <div className="sidebar-brand">
         <div className="sidebar-logo">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -37,26 +43,32 @@ export default function Sidebar({ open, onClose }) {
             <path d="M8 18V10l3 4 3-4v8M17 10h4M19 10v8M19 14h2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stopColor="#7c3aed"/><stop offset="1" stopColor="#3b82f6"/></linearGradient></defs>
           </svg>
-          <div>
-            <h2>Dev Portal</h2>
-            <span>JetBrains Plugins</span>
-          </div>
+          {!collapsed && (
+            <div>
+              <h2>Dev Portal</h2>
+              <span>JetBrains Plugins</span>
+            </div>
+          )}
         </div>
       </div>
 
       <nav className="sidebar-nav">
         {navItems.map(section => (
           <div className="sidebar-section" key={section.section}>
-            <div className="sidebar-section-title">{section.section}</div>
+            {!collapsed && <div className="sidebar-section-title">{section.section}</div>}
             {section.items.map(item => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.to === '/'}
                 className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+                title={collapsed ? item.label : undefined}
               >
                 <span className="sidebar-icon">{item.icon}</span>
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && item.to === '/catalog' && favCount > 0 && (
+                  <span className="sidebar-badge">{favCount}</span>
+                )}
               </NavLink>
             ))}
           </div>
@@ -64,13 +76,23 @@ export default function Sidebar({ open, onClose }) {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-footer-user">
-          <img src="https://github.com/JirakJ.png" alt="" className="sidebar-avatar" loading="lazy" />
-          <div>
-            <div className="sidebar-footer-name">Jakub Jirák</div>
-            <div className="sidebar-footer-role">Owner</div>
+        <button
+          className="sidebar-collapse-btn"
+          onClick={onToggleCollapse}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? expandIcon : collapseIcon}
+        </button>
+        {!collapsed && (
+          <div className="sidebar-footer-user">
+            <img src="https://github.com/JirakJ.png" alt="" className="sidebar-avatar" loading="lazy" />
+            <div>
+              <div className="sidebar-footer-name">Jakub Jirák</div>
+              <div className="sidebar-footer-role">Owner</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </aside>
   );

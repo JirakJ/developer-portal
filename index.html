@@ -27,6 +27,20 @@
     <link rel="manifest" href="/developer-portal/manifest.json" />
   </head>
   <body>
+    <script>
+      // Sync theme before React mounts to prevent flash of wrong theme
+      (function(){
+        try {
+          var raw = localStorage.getItem('dp_theme');
+          var parsed = raw ? JSON.parse(raw) : null;
+          var mode = (parsed && parsed._v === 1 && parsed.data) ? parsed.data : 'system';
+          var resolved = mode === 'system'
+            ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+            : mode;
+          document.documentElement.setAttribute('data-theme', resolved);
+        } catch(e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

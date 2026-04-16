@@ -42,11 +42,32 @@ export default function Releases() {
     });
   };
 
+  const exportCSV = () => {
+    const header = 'Plugin Name,Version,Category,Marketplace URL';
+    const rows = sorted.map(p =>
+      `"${p.name}","${p.version}","${p.category}","https://plugins.jetbrains.com/plugin/${p.id}-${p.slug}"`
+    );
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `plugin-releases-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exported');
+  };
+
   return (
     <div className="page">
       <div className="page-header">
-        <h1>📦 Releases</h1>
-        <p>Latest plugin versions and release history</p>
+        <div className="page-header-row">
+          <div>
+            <h1>📦 Releases</h1>
+            <p>Latest plugin versions and release history</p>
+          </div>
+          <button className="btn-secondary" onClick={exportCSV}>⬇ Export CSV</button>
+        </div>
       </div>
 
       <table className="data-table">
