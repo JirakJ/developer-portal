@@ -1,0 +1,90 @@
+import { useState, useMemo } from 'react';
+import plugins, { categories, allTags } from '../data/plugins';
+import PluginCard from '../components/PluginCard';
+
+export default function Catalog() {
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
+
+  const filtered = useMemo(() => {
+    return plugins.filter(p => {
+      const matchSearch = !search ||
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.description.toLowerCase().includes(search.toLowerCase()) ||
+        p.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
+      const matchCategory = !category || p.category === category;
+      return matchSearch && matchCategory;
+    });
+  }, [search, category]);
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1>Plugin Catalog</h1>
+        <p>{plugins.length} plugins available</p>
+      </div>
+
+      <div className="catalog-toolbar">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search plugins..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <select
+          className="filter-select"
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+        >
+          <option value="">All categories</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <div className="view-toggle">
+          <button
+            className={viewMode === 'grid' ? 'active' : ''}
+            onClick={() => setViewMode('grid')}
+            title="Grid view"
+          >▦</button>
+          <button
+            className={viewMode === 'list' ? 'active' : ''}
+            onClick={() => setViewMode('list')}
+            title="List view"
+          >☰</button>
+        </div>
+      </div>
+
+      <p className="result-count">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</p>
+
+      {viewMode === 'grid' ? (
+        <div className="catalog-grid">
+          {filtered.map(p => <PluginCard key={p.slug} plugin={p} />)}
+        </div>
+      ) : (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Plugin</th>
+              <th>Category</th>
+              <th>Version</th>
+              <th>Tags</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(p => (
+              <tr key={p.slug}>
+                <td>{p.icon}</td>
+                <td><a href={`#/plugin/${p.slug}`}>{p.name}</a></td>
+                <td>{p.category}</td>
+                <td>{p.version}</td>
+                <td>{p.tags.join(', ')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
