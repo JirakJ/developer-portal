@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Login = lazy(() => import('./pages/Login'));
 const Home = lazy(() => import('./pages/Home'));
@@ -17,7 +18,7 @@ const STORAGE_KEY = 'dp_user';
 
 function PageLoader() {
   return (
-    <div className="page-loader">
+    <div className="page-loader" role="status" aria-label="Loading page">
       <div className="loader-spinner" />
       <span>Loading…</span>
     </div>
@@ -59,10 +60,10 @@ export default function App() {
     } catch { return null; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { pathname } = useLocation();
+  const location = useLocation();
 
   // Close mobile sidebar on navigation
-  useEffect(() => { setSidebarOpen(false); }, [pathname]);
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -84,30 +85,43 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      {/* Mobile overlay */}
-      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+      <a href="#main-content" className="skip-link">Skip to content</a>
+
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+      )}
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="main-content">
         <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} />
-        <div className="content-area">
+        <main id="main-content" className="content-area" tabIndex={-1}>
           <ScrollToTop />
           <DocumentTitle />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/catalog" element={<Catalog />} />
-              <Route path="/plugin/:slug" element={<PluginDetail />} />
-              <Route path="/docs" element={<Docs />} />
-              <Route path="/apis" element={<APIs />} />
-              <Route path="/releases" element={<Releases />} />
-              <Route path="/health" element={<Health />} />
-              <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Routes>
-          </Suspense>
-        </div>
+          <ErrorBoundary key={location.pathname}>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/catalog" element={<Catalog />} />
+                <Route path="/plugin/:slug" element={<PluginDetail />} />
+                <Route path="/docs" element={<Docs />} />
+                <Route path="/apis" element={<APIs />} />
+                <Route path="/releases" element={<Releases />} />
+                <Route path="/health" element={<Health />} />
+                <Route path="/404" element={<NotFound />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </main>
+        <footer className="portal-footer">
+          <span>© 2026 Jakub Jirák · Developer Portal v1.0.0</span>
+          <span>
+            <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
+              JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
+            </a>
+          </span>
+        </footer>
       </div>
     </div>
   );

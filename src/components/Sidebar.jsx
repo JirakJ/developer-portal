@@ -61,7 +61,7 @@ export default function Sidebar({ open, onClose }) {
 
       <div className="sidebar-footer">
         <div className="sidebar-footer-user">
-          <img src="https://github.com/JirakJ.png" alt="" className="sidebar-avatar" />
+          <img src="https://github.com/JirakJ.png" alt="" className="sidebar-avatar" loading="lazy" />
           <div>
             <div className="sidebar-footer-name">Jakub Jirák</div>
             <div className="sidebar-footer-role">Owner</div>

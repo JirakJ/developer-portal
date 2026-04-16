@@ -1,6 +1,10 @@
+import { Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 
 export default function Health() {
+  const freemiumCount = plugins.filter(p => p.pricing === 'freemium').length;
+  const paidCount = plugins.length - freemiumCount;
+
   return (
     <div className="page">
       <div className="page-header">
@@ -10,20 +14,20 @@ export default function Health() {
 
       <div className="stats-grid">
         <div className="stat-card stat-green">
-          <div className="stat-value">{plugins.length}</div>
           <div className="stat-label">Plugins Published</div>
+          <div className="stat-value">{plugins.length}</div>
         </div>
         <div className="stat-card stat-green">
-          <div className="stat-value">✓</div>
           <div className="stat-label">Marketplace Status</div>
-        </div>
-        <div className="stat-card stat-green">
-          <div className="stat-value">2026.1+</div>
-          <div className="stat-label">IDE Compatibility</div>
+          <div className="stat-value">Online</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">Freemium</div>
-          <div className="stat-label">Pricing Model</div>
+          <div className="stat-label">IDE Compatibility</div>
+          <div className="stat-value">2026.1+</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Freemium / Paid</div>
+          <div className="stat-value">{freemiumCount} / {paidCount}</div>
         </div>
       </div>
 
@@ -41,7 +45,7 @@ export default function Health() {
           <tbody>
             {plugins.map(p => (
               <tr key={p.slug}>
-                <td>{p.icon} {p.name}</td>
+                <td><Link to={`/plugin/${p.slug}`}>{p.icon} {p.name}</Link></td>
                 <td><code>{p.version}</code></td>
                 <td>✅ Compatible</td>
                 <td><span className="status-badge status-active">Healthy</span></td>

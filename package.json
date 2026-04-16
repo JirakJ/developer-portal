@@ -1,7 +1,10 @@
 {
   "name": "developer-portal",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "JetBrains Plugin Suite — Developer Portal & Catalog",
+  "author": "Jakub Jirák",
+  "homepage": "https://jirakj.github.io/developer-portal/",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import plugins from '../data/plugins';
 
@@ -11,15 +11,27 @@ const routeTitles = {
   '/health': 'System Health',
 };
 
+function useIsMac() {
+  return useMemo(() => {
+    try {
+      const platform = navigator.userAgentData?.platform || navigator.platform || '';
+      return /mac/i.test(platform);
+    } catch { return false; }
+  }, []);
+}
+
 export default function Header({ user, onLogout, onMenuToggle }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const isMac = useIsMac();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
+
+  const shortcutLabel = isMac ? '⌘K' : 'Ctrl+K';
 
   const title = location.pathname.startsWith('/plugin/')
     ? 'Plugin Detail'
@@ -93,7 +105,7 @@ export default function Header({ user, onLogout, onMenuToggle }) {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search… ⌘K"
+            placeholder={`Search… ${shortcutLabel}`}
             value={query}
             onChange={e => { setQuery(e.target.value); setShowResults(true); }}
             onFocus={() => query && setShowResults(true)}
@@ -104,7 +116,7 @@ export default function Header({ user, onLogout, onMenuToggle }) {
             role="combobox"
             aria-autocomplete="list"
           />
-          <kbd className="search-kbd">⌘K</kbd>
+          <kbd className="search-kbd">{shortcutLabel}</kbd>
           {showResults && results.length > 0 && (
             <div className="search-dropdown" role="listbox">
               {results.map((p, i) => (

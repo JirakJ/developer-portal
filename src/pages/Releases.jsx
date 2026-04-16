@@ -1,7 +1,7 @@
+import { Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 
 export default function Releases() {
-  // Group by version prefix (YYYY.M)
   const sorted = [...plugins].sort((a, b) => b.version.localeCompare(a.version));
 
   return (
@@ -25,12 +25,12 @@ export default function Releases() {
           {sorted.map(p => (
             <tr key={p.slug}>
               <td>{p.icon}</td>
-              <td><a href={`#/plugin/${p.slug}`}>{p.name}</a></td>
+              <td><Link to={`/plugin/${p.slug}`}>{p.name}</Link></td>
               <td><code>{p.version}</code></td>
               <td>{p.category}</td>
               <td>
                 <a href={`https://plugins.jetbrains.com/plugin/${p.id}-${p.slug}`} target="_blank" rel="noopener noreferrer">
-                  View →
+                  View <span className="external-icon" aria-hidden="true">↗</span>
                 </a>
               </td>
             </tr>

@@ -9,7 +9,10 @@ export default function PluginDetail() {
     return (
       <div className="page">
         <h1>Plugin not found</h1>
-        <Link to="/catalog">← Back to Catalog</Link>
+        <p style={{color: 'var(--text-secondary)', margin: '8px 0 20px'}}>
+          The plugin "{slug}" doesn't exist in the catalog.
+        </p>
+        <Link to="/catalog" className="btn-secondary">← Back to Catalog</Link>
       </div>
     );
   }
@@ -18,7 +21,11 @@ export default function PluginDetail() {
 
   return (
     <div className="page">
-      <Link to="/catalog" className="back-link">← Back to Catalog</Link>
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <Link to="/catalog">Catalog</Link>
+        <span className="breadcrumb-sep" aria-hidden="true">/</span>
+        <span className="breadcrumb-current" aria-current="page">{plugin.name}</span>
+      </nav>
 
       <div className="plugin-detail">
         <div className="plugin-detail-header">
@@ -57,10 +64,12 @@ export default function PluginDetail() {
           <h2>Links</h2>
           <div className="plugin-links">
             <a href={marketplaceUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
-              🛒 JetBrains Marketplace
+              🛒 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
+              <span className="sr-only">(opens in new tab)</span>
             </a>
             <a href={`https://github.com/JirakJ/jetbrains-plugins/tree/main/${plugin.slug}`} target="_blank" rel="noopener noreferrer" className="btn-secondary">
-              📂 Source Code
+              📂 Source Code <span className="external-icon" aria-hidden="true">↗</span>
+              <span className="sr-only">(opens in new tab)</span>
             </a>
           </div>
         </div>

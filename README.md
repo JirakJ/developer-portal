@@ -1,16 +1,64 @@
-# React + Vite
+# Developer Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Internal developer portal for the JetBrains Plugin Suite — a catalog of 33+ marketplace plugins, documentation, API references, release tracking, and system health monitoring.
 
-Currently, two official plugins are available:
+**Live:** [jirakj.github.io/developer-portal](https://jirakj.github.io/developer-portal/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- 🔍 **Plugin Catalog** — Browse, search, and filter all plugins by category, pricing model, or keyword
+- 📄 **Plugin Detail** — Per-plugin overview with features, tags, and marketplace links
+- 📚 **Documentation Hub** — Centralized docs covering development, publishing, and architecture
+- 🔗 **API Reference** — Links to JetBrains Platform SDK, Marketplace API, and internal APIs
+- 📦 **Release Tracker** — Version overview across the entire plugin suite
+- 💚 **System Health** — Compatibility matrix and marketplace status
+- ⌨️ **Global Search** — `⌘K` / `Ctrl+K` shortcut for instant fuzzy search
+- ♿ **Accessible** — Skip navigation, focus indicators, screen reader support
+- 📱 **Responsive** — Full mobile layout with hamburger menu
+- ⚡ **Fast** — Code-split routes, lazy loading, optimized builds
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+| Layer       | Technology                      |
+|-------------|----------------------------------|
+| Framework   | React 19                        |
+| Bundler     | Vite 8                          |
+| Routing     | react-router-dom 7 (HashRouter) |
+| Hosting     | GitHub Pages                    |
+| CI/CD       | GitHub Actions                  |
+| Styling     | Custom CSS (dark theme)         |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+
+# Production build
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Deployment
+
+Pushes to `main` automatically trigger a GitHub Actions workflow that builds the site and deploys to GitHub Pages.
+
+## Project Structure
+
+```
+src/
+├── components/    # Shared components (Header, Sidebar, ErrorBoundary)
+├── data/          # Plugin catalog data
+├── pages/         # Route pages (Home, Catalog, Docs, APIs, etc.)
+├── styles/        # Global CSS design system
+└── App.jsx        # Root layout, routing, auth
+```
+
+## Author
+
+**Ing. Jakub Jirák** — [JetBrains Marketplace](https://plugins.jetbrains.com/organizations/JakubJirak)

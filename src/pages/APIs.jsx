@@ -42,7 +42,7 @@ export default function APIs() {
             </div>
             <p>{api.desc}</p>
             <a href={api.url} target="_blank" rel="noopener noreferrer" className="api-link">
-              View Documentation →
+              View Documentation <span className="external-icon" aria-hidden="true">↗</span>
             </a>
           </div>
         ))}

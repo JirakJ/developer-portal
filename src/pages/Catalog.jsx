@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import PluginCard from '../components/PluginCard';
 
@@ -65,7 +65,18 @@ export default function Catalog() {
 
       <p className="result-count">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</p>
 
-      {viewMode === 'grid' ? (
+      {filtered.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">🔍</div>
+          <h3>No plugins found</h3>
+          <p>Try adjusting your search or filter to find what you're looking for.</p>
+          {(search || category) && (
+            <button className="btn-secondary" onClick={() => { setSearch(''); setCategory(''); }}>
+              Clear filters
+            </button>
+          )}
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="catalog-grid">
           {filtered.map(p => <PluginCard key={p.slug} plugin={p} />)}
         </div>
@@ -84,7 +95,7 @@ export default function Catalog() {
             {filtered.map(p => (
               <tr key={p.slug}>
                 <td>{p.icon}</td>
-                <td><a href={`#/plugin/${p.slug}`}>{p.name}</a></td>
+                <td><Link to={`/plugin/${p.slug}`}>{p.name}</Link></td>
                 <td>{p.category}</td>
                 <td>{p.version}</td>
                 <td>{p.tags.join(', ')}</td>
