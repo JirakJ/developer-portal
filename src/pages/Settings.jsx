@@ -17,6 +17,9 @@ export default function Settings() {
   const toast = useToast();
 
   const [sidebarDefault, setSidebarDefault] = useState(() => getItem('sidebarCollapsed', false));
+  const [recentViewedCount, setRecentViewedCount] = useState(() => getItem('recentViewed', []).length);
+  const [compareShortlistCount, setCompareShortlistCount] = useState(() => getItem('compareShortlist', []).length);
+  const [presetCount, setPresetCount] = useState(() => getItem('catalogPresets', []).length);
 
   const handleSidebarDefault = (val) => {
     setSidebarDefault(val);
@@ -36,6 +39,24 @@ export default function Settings() {
     }
     clearFavorites();
     toast.success(`Cleared ${favorites.length} favorite(s)`);
+  };
+
+  const handleClearRecentViewed = () => {
+    removeItem('recentViewed');
+    setRecentViewedCount(0);
+    toast.success('Recently viewed list cleared');
+  };
+
+  const handleClearCompareShortlist = () => {
+    removeItem('compareShortlist');
+    setCompareShortlistCount(0);
+    toast.success('Comparison shortlist cleared');
+  };
+
+  const handleClearCatalogPresets = () => {
+    removeItem('catalogPresets');
+    setPresetCount(0);
+    toast.success('Catalog presets cleared');
   };
 
   const handleResetAll = () => {
@@ -108,6 +129,27 @@ export default function Settings() {
             <p>{favorites.length} plugin(s) bookmarked</p>
           </div>
           <button className="btn-secondary" onClick={handleClearFavorites}>Clear</button>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Recently viewed</strong>
+            <p>{recentViewedCount} plugin(s) in history</p>
+          </div>
+          <button className="btn-secondary" onClick={handleClearRecentViewed}>Clear</button>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Comparison shortlist</strong>
+            <p>{compareShortlistCount} plugin(s) selected for compare</p>
+          </div>
+          <button className="btn-secondary" onClick={handleClearCompareShortlist}>Clear</button>
+        </div>
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <strong>Catalog presets</strong>
+            <p>{presetCount} saved filter preset(s)</p>
+          </div>
+          <button className="btn-secondary" onClick={handleClearCatalogPresets}>Clear</button>
         </div>
       </div>
 

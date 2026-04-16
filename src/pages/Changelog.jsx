@@ -2,8 +2,21 @@ import Breadcrumb from '../components/Breadcrumb';
 
 const changelog = [
   {
+    version: '1.5.0',
+    date: '2026-04-16',
+    changes: [
+      'Catalog filters are now URL-synced (search, category, tag, favorites, view mode) for shareable deep links',
+      'Added Catalog saved presets with quick apply/remove actions',
+      'Added comparison shortlist toggle button on plugin cards and plugin detail pages',
+      'Compare page now loads from persistent shortlist and supports clear + copy-link actions',
+      'Added recently viewed plugins tracking and surfaced it on Home and in the Command Palette',
+      'Command Palette now highlights matched search text and includes comparison shortlist quick action',
+      'Settings now includes clear actions for recently viewed items, compare shortlist, and catalog presets',
+    ],
+  },
+  {
     version: '1.4.0',
-    date: '2026-04-17',
+    date: '2026-04-16',
     changes: [
       'Added announcement banner with severity levels and dismissal persistence',
       'Added share button on plugin detail pages (Web Share API + clipboard fallback)',

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -83,7 +83,6 @@ export default function App() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
 
   // Close mobile sidebar on navigation
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
@@ -161,7 +160,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
           <footer className="portal-footer">
-            <span>© 2026 Jakub Jirák · Developer Portal v1.4.0</span>
+            <span>© 2026 Jakub Jirák · Developer Portal v1.5.0</span>
             <span>
               <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
                 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>

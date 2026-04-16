@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 import FavoriteButton from '../components/FavoriteButton';
+import CompareToggleButton from '../components/CompareToggleButton';
 import ShareButton from '../components/ShareButton';
 import { getRelatedPlugins } from '../utils/tags';
+import { pushRecentViewed } from '../utils/recentViewed';
 
 const TABS = ['overview', 'features', 'links', 'related', 'activity'];
 const TAB_LABELS = { overview: 'Overview', features: 'Features', links: 'Links', related: 'Related', activity: 'Activity' };
@@ -34,6 +36,13 @@ export default function PluginDetail() {
 
   const activeTab = TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
   const setTab = (tab) => setSearchParams({ tab }, { replace: true });
+  const related = useMemo(() => (plugin ? getRelatedPlugins(slug, 4) : []), [plugin, slug]);
+  const timeline = useMemo(() => (plugin ? deriveTimeline(plugin.version) : []), [plugin]);
+  const marketplaceUrl = plugin ? `https://plugins.jetbrains.com/plugin/${plugin.id}-${plugin.slug}` : '';
+
+  useEffect(() => {
+    if (plugin) pushRecentViewed(slug);
+  }, [plugin, slug]);
 
   if (!plugin) {
     return (
@@ -44,12 +53,8 @@ export default function PluginDetail() {
         </p>
         <Link to="/catalog" className="btn-secondary">← Back to Catalog</Link>
       </div>
-    );
+      );
   }
-
-  const related = getRelatedPlugins(slug, 4);
-  const timeline = useMemo(() => deriveTimeline(plugin.version), [plugin.version]);
-  const marketplaceUrl = `https://plugins.jetbrains.com/plugin/${plugin.id}-${plugin.slug}`;
 
   return (
     <div className="page">
@@ -70,6 +75,7 @@ export default function PluginDetail() {
               <span className="plugin-version">v{plugin.version}</span>
             </div>
           </div>
+          <CompareToggleButton slug={plugin.slug} size={20} />
           <FavoriteButton slug={plugin.slug} size={22} />
           <ShareButton title={plugin.name} size={20} />
         </div>

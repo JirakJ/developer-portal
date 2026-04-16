@@ -2,13 +2,17 @@ import { useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 import Breadcrumb from '../components/Breadcrumb';
+import { useToast } from '../contexts/ToastContext';
+import { getCompareShortlist, setCompareShortlist } from '../utils/compareShortlist';
 
 export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const toast = useToast();
 
   const selectedSlugs = useMemo(() => {
     const ids = searchParams.get('plugins');
-    return ids ? ids.split(',').filter(Boolean) : [];
+    if (ids) return ids.split(',').filter(Boolean);
+    return getCompareShortlist();
   }, [searchParams]);
 
   const selected = useMemo(() =>
@@ -19,11 +23,29 @@ export default function Compare() {
     plugins.filter(p => !selectedSlugs.includes(p.slug)),
   [selectedSlugs]);
 
+  const applySelection = (slugs) => {
+    const next = [...new Set(slugs)].slice(0, 4);
+    setCompareShortlist(next);
+    setSearchParams(next.length ? { plugins: next.join(',') } : {}, { replace: true });
+  };
+
   const togglePlugin = (slug) => {
     const next = selectedSlugs.includes(slug)
       ? selectedSlugs.filter(s => s !== slug)
       : [...selectedSlugs, slug].slice(0, 4);
-    setSearchParams(next.length ? { plugins: next.join(',') } : {}, { replace: true });
+    applySelection(next);
+  };
+
+  const clearAll = () => applySelection([]);
+
+  const copyCompareLink = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Compare link copied');
+    } catch {
+      toast.error('Failed to copy compare link');
+    }
   };
 
   const allFeatures = useMemo(() => {
@@ -32,21 +54,20 @@ export default function Compare() {
     return [...set].sort();
   }, [selected]);
 
-  const allTags = useMemo(() => {
-    const set = new Set();
-    selected.forEach(p => p.tags.forEach(t => set.add(t)));
-    return [...set].sort();
-  }, [selected]);
-
   return (
     <div className="page">
       <Breadcrumb current="Compare Plugins" />
-      <div className="page-header">
-        <h1>⚖️ Plugin Comparison</h1>
-        <p>Select up to 4 plugins to compare side by side</p>
+      <div className="page-header page-header-row">
+        <div>
+          <h1>⚖️ Plugin Comparison</h1>
+          <p>Select up to 4 plugins to compare side by side</p>
+        </div>
+        <div className="compare-actions">
+          <button className="btn-secondary" onClick={copyCompareLink} disabled={selected.length === 0}>Copy Link</button>
+          <button className="btn-secondary" onClick={clearAll} disabled={selected.length === 0}>Clear</button>
+        </div>
       </div>
 
-      {/* Plugin selector */}
       <div className="compare-selector">
         <div className="compare-selected">
           {selected.length === 0 && (
@@ -76,7 +97,6 @@ export default function Compare() {
         </details>
       </div>
 
-      {/* Comparison table */}
       {selected.length >= 2 ? (
         <div className="compare-table-wrap">
           <table className="data-table compare-table">
@@ -140,3 +160,4 @@ export default function Compare() {
     </div>
   );
 }
+

@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import plugins from '../data/plugins';
 import { useTheme } from '../contexts/ThemeContext';
+import { getRecentViewed } from '../utils/recentViewed';
+import { getCompareShortlist } from '../utils/compareShortlist';
 
 const pages = [
   { label: 'Home', path: '/', icon: '🏠' },
@@ -15,6 +17,21 @@ const pages = [
   { label: 'Changelog', path: '/changelog', icon: '📝' },
   { label: 'Settings', path: '/settings', icon: '⚙️' },
 ];
+
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const lower = text.toLowerCase();
+  const q = query.toLowerCase();
+  const idx = lower.indexOf(q);
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="command-palette-highlight">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
 
 export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
   const navigate = useNavigate();
@@ -29,6 +46,8 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
   const items = useMemo(() => {
     const q = query.toLowerCase().trim();
     const result = [];
+    const shortlist = getCompareShortlist();
+    const shortlistPath = shortlist.length ? `/compare?plugins=${shortlist.join(',')}` : '/compare';
 
     const filteredPages = q
       ? pages.filter(p => p.label.toLowerCase().includes(q))
@@ -52,9 +71,27 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
       }));
     }
 
+    if (!q) {
+      const recentViewed = getRecentViewed()
+        .map(slug => plugins.find(p => p.slug === slug))
+        .filter(Boolean)
+        .slice(0, 5);
+      if (recentViewed.length > 0) {
+        result.push({ type: 'section', label: 'Recently Viewed' });
+        recentViewed.forEach(p => result.push({
+          type: 'plugin',
+          label: p.name,
+          path: `/plugin/${p.slug}`,
+          icon: p.icon,
+          meta: `Recent · ${p.category}`,
+        }));
+      }
+    }
+
     const actions = [
       { label: 'Toggle Theme', icon: '🎨', action: 'toggle-theme', meta: `Current: ${themeLabel}` },
       { label: 'Keyboard Shortcuts', icon: '⌨️', action: 'shortcuts', meta: 'Press ?' },
+      { label: 'Open Comparison Shortlist', icon: '⚖️', action: 'open-comparison', path: shortlistPath, meta: shortlist.length ? `${shortlist.length} selected` : 'No plugins selected' },
     ];
     const filteredActions = q
       ? actions.filter(a => a.label.toLowerCase().includes(q))
@@ -101,6 +138,8 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
         onClose();
         setTimeout(() => onOpenShortcuts?.(), 100);
         return;
+      } else if (item.action === 'open-comparison') {
+        navigate(item.path || '/compare');
       }
       onClose();
     }
@@ -166,8 +205,8 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
                 aria-selected={isActive}
               >
                 <span className="command-palette-item-icon">{item.icon}</span>
-                <span className="command-palette-item-label">{item.label}</span>
-                {item.meta && <span className="command-palette-item-meta">{item.meta}</span>}
+                <span className="command-palette-item-label">{highlightMatch(item.label, query.trim())}</span>
+                {item.meta && <span className="command-palette-item-meta">{highlightMatch(item.meta, query.trim())}</span>}
               </button>
             );
           })}

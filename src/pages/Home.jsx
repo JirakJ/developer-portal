@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import { getTagCloud } from '../utils/tags';
+import { getRecentViewed } from '../utils/recentViewed';
 
 const categoryIcons = {
   'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
@@ -66,6 +67,10 @@ export default function Home() {
   []);
 
   const tagCloud = useMemo(() => getTagCloud(), []);
+  const recentlyViewed = useMemo(() => {
+    const slugs = getRecentViewed();
+    return slugs.map(slug => plugins.find(p => p.slug === slug)).filter(Boolean).slice(0, 6);
+  }, []);
 
   return (
     <div className="page">
@@ -158,6 +163,26 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {recentlyViewed.length > 0 && (
+        <div className="section">
+          <div className="section-header">
+            <h2>Recently Viewed</h2>
+            <Link to="/catalog" className="section-link">Open catalog →</Link>
+          </div>
+          <div className="related-grid">
+            {recentlyViewed.map(p => (
+              <Link to={`/plugin/${p.slug}`} key={p.slug} className="related-card">
+                <span className="related-icon">{p.icon}</span>
+                <div>
+                  <div className="related-name">{p.name}</div>
+                  <div className="related-cat">{p.category} · v{p.version}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="section">
         <div className="section-header">
