@@ -2,6 +2,20 @@ import Breadcrumb from '../components/Breadcrumb';
 
 const changelog = [
   {
+    version: '1.6.0',
+    date: '2026-04-16',
+    changes: [
+      'Added Catalog sorting controls (field + direction) with URL persistence',
+      'Catalog presets now persist and restore sorting metadata',
+      'Compare page gained Differences-only mode with URL support (?diff=1)',
+      'Added Compare markdown export (copy matrix to clipboard)',
+      'Command Palette now includes Favorites and Catalog Presets sections',
+      'Added quick actions in Command Palette to clear recently viewed and compare shortlist',
+      'Added Quick Workbench panel on Home for compare shortlist and favorites',
+      'Improved sidebar and command palette behavior for cleaner navigation state handling',
+    ],
+  },
+  {
     version: '1.5.0',
     date: '2026-04-16',
     changes: [

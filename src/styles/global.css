@@ -1436,6 +1436,13 @@ a:hover { color: #60a5fa; }
 .compare-actions {
   display: inline-flex;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.compare-diff-active {
+  border-color: var(--cyan) !important;
+  color: var(--cyan) !important;
+  background: var(--cyan-soft) !important;
 }
 .compare-selected {
   display: flex;

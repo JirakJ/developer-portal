@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import PluginCard from '../components/PluginCard';
@@ -10,16 +10,21 @@ import { normalizeTag } from '../utils/tags';
 
 const PRESETS_KEY = 'catalogPresets';
 const MAX_PRESETS = 8;
+const SORT_KEYS = ['name', 'version', 'category', 'pricing'];
 
 function readCatalogState(searchParams) {
   const defaultView = getItem('catalogView', 'grid');
   const view = searchParams.get('view');
+  const sort = searchParams.get('sort');
+  const dir = searchParams.get('dir');
   return {
     search: searchParams.get('q') || '',
     category: searchParams.get('category') || '',
     tagFilter: searchParams.get('tag') || '',
     showFavoritesOnly: searchParams.get('fav') === '1',
     viewMode: view === 'list' ? 'list' : (view === 'grid' ? 'grid' : defaultView),
+    sortKey: SORT_KEYS.includes(sort) ? sort : 'name',
+    sortDir: dir === 'desc' ? 'desc' : 'asc',
   };
 }
 
@@ -30,7 +35,15 @@ export default function Catalog() {
   const { isFavorite } = useFavorites();
   const toast = useToast();
 
-  const { search, category, tagFilter, showFavoritesOnly, viewMode } = readCatalogState(searchParams);
+  const {
+    search,
+    category,
+    tagFilter,
+    showFavoritesOnly,
+    viewMode,
+    sortKey,
+    sortDir,
+  } = readCatalogState(searchParams);
 
   const updateState = (overrides) => {
     const next = {
@@ -39,6 +52,8 @@ export default function Catalog() {
       tagFilter,
       showFavoritesOnly,
       viewMode,
+      sortKey,
+      sortDir,
       ...overrides,
     };
     const params = new URLSearchParams();
@@ -47,6 +62,8 @@ export default function Catalog() {
     if (next.tagFilter) params.set('tag', next.tagFilter);
     if (next.showFavoritesOnly) params.set('fav', '1');
     if (next.viewMode !== 'grid') params.set('view', next.viewMode);
+    if (next.sortKey !== 'name') params.set('sort', next.sortKey);
+    if (next.sortDir !== 'asc') params.set('dir', next.sortDir);
     setSearchParams(params, { replace: true });
   };
 
@@ -59,19 +76,26 @@ export default function Catalog() {
     updateState({ search: '', category: '', tagFilter: '', showFavoritesOnly: false });
   };
 
-  const filtered = useMemo(() => {
-    return plugins.filter(p => {
-      const q = search.toLowerCase();
-      const matchSearch = !search ||
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.tags.some(t => t.toLowerCase().includes(q));
-      const matchCategory = !category || p.category === category;
-      const matchTag = !tagFilter || p.tags.some(t => normalizeTag(t) === normalizeTag(tagFilter));
-      const matchFav = !showFavoritesOnly || isFavorite(p.slug);
-      return matchSearch && matchCategory && matchTag && matchFav;
-    });
-  }, [search, category, tagFilter, showFavoritesOnly, isFavorite]);
+  const filtered = plugins.filter(p => {
+    const q = search.toLowerCase();
+    const matchSearch = !search ||
+      p.name.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.tags.some(t => t.toLowerCase().includes(q));
+    const matchCategory = !category || p.category === category;
+    const matchTag = !tagFilter || p.tags.some(t => normalizeTag(t) === normalizeTag(tagFilter));
+    const matchFav = !showFavoritesOnly || isFavorite(p.slug);
+    return matchSearch && matchCategory && matchTag && matchFav;
+  });
+
+  const cmp = {
+    name: (a, b) => a.name.localeCompare(b.name),
+    version: (a, b) => a.version.localeCompare(b.version),
+    category: (a, b) => a.category.localeCompare(b.category),
+    pricing: (a, b) => a.pricing.localeCompare(b.pricing),
+  }[sortKey] || ((a, b) => a.name.localeCompare(b.name));
+  const sorted = [...filtered].sort(cmp);
+  if (sortDir === 'desc') sorted.reverse();
 
   const savePreset = () => {
     const name = presetName.trim();
@@ -79,13 +103,21 @@ export default function Catalog() {
       toast.info('Enter a preset name');
       return;
     }
-    const snapshot = { search, category, tagFilter, showFavoritesOnly, viewMode };
-    if (!snapshot.search && !snapshot.category && !snapshot.tagFilter && !snapshot.showFavoritesOnly && snapshot.viewMode === 'grid') {
+    const snapshot = { search, category, tagFilter, showFavoritesOnly, viewMode, sortKey, sortDir };
+    if (
+      !snapshot.search &&
+      !snapshot.category &&
+      !snapshot.tagFilter &&
+      !snapshot.showFavoritesOnly &&
+      snapshot.viewMode === 'grid' &&
+      snapshot.sortKey === 'name' &&
+      snapshot.sortDir === 'asc'
+    ) {
       toast.info('No filters to save');
       return;
     }
     const next = [
-      { id: `${Date.now()}`, name, ...snapshot },
+      { id: name.toLowerCase().replace(/\s+/g, '-'), name, ...snapshot },
       ...presets.filter(p => p.name.toLowerCase() !== name.toLowerCase()),
     ].slice(0, MAX_PRESETS);
     setPresets(next);
@@ -103,6 +135,8 @@ export default function Catalog() {
       tagFilter: preset.tagFilter || '',
       showFavoritesOnly: Boolean(preset.showFavoritesOnly),
       viewMode: preset.viewMode === 'list' ? 'list' : 'grid',
+      sortKey: SORT_KEYS.includes(preset.sortKey) ? preset.sortKey : 'name',
+      sortDir: preset.sortDir === 'desc' ? 'desc' : 'asc',
     });
   };
 
@@ -162,6 +196,25 @@ export default function Catalog() {
             title="List view"
           >☰</button>
         </div>
+        <select
+          className="filter-select"
+          value={sortKey}
+          onChange={e => updateState({ sortKey: e.target.value })}
+          aria-label="Sort plugins by"
+        >
+          <option value="name">Sort: Name</option>
+          <option value="version">Sort: Version</option>
+          <option value="category">Sort: Category</option>
+          <option value="pricing">Sort: Pricing</option>
+        </select>
+        <button
+          className="btn-secondary"
+          onClick={() => updateState({ sortDir: sortDir === 'asc' ? 'desc' : 'asc' })}
+          aria-label="Toggle sort direction"
+          title="Toggle sort direction"
+        >
+          {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
+        </button>
       </div>
 
       <div className="catalog-presets">
@@ -185,9 +238,9 @@ export default function Catalog() {
         )}
       </div>
 
-      <p className="result-count">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</p>
+      <p className="result-count">{sorted.length} result{sorted.length !== 1 ? 's' : ''}</p>
 
-      {filtered.length === 0 ? (
+      {sorted.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">🔍</div>
           <h3>No plugins found</h3>
@@ -200,7 +253,7 @@ export default function Catalog() {
         </div>
       ) : viewMode === 'grid' ? (
         <div className="catalog-grid">
-          {filtered.map(p => <PluginCard key={p.slug} plugin={p} />)}
+          {sorted.map(p => <PluginCard key={p.slug} plugin={p} />)}
         </div>
       ) : (
         <table className="data-table">
@@ -214,7 +267,7 @@ export default function Catalog() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(p => (
+            {sorted.map(p => (
               <tr key={p.slug}>
                 <td>{p.icon}</td>
                 <td><Link to={`/plugin/${p.slug}`}>{p.name}</Link></td>
@@ -229,4 +282,3 @@ export default function Catalog() {
     </div>
   );
 }
-

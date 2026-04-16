@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import plugins from '../data/plugins';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 import { getRecentViewed } from '../utils/recentViewed';
-import { getCompareShortlist } from '../utils/compareShortlist';
+import { getCompareShortlist, setCompareShortlist } from '../utils/compareShortlist';
+import { getItem, removeItem } from '../utils/storage';
 
 const pages = [
   { label: 'Home', path: '/', icon: '🏠' },
@@ -36,9 +38,9 @@ function highlightMatch(text, query) {
 export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
   const navigate = useNavigate();
   const { mode, cycle } = useTheme();
+  const toast = useToast();
   const [query, setQuery] = useState('');
   const [activeIdx, setActiveIdx] = useState(0);
-  const inputRef = useRef(null);
   const listRef = useRef(null);
 
   const themeLabel = { dark: 'Dark', light: 'Light', system: 'System' }[mode] || mode;
@@ -48,6 +50,11 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
     const result = [];
     const shortlist = getCompareShortlist();
     const shortlistPath = shortlist.length ? `/compare?plugins=${shortlist.join(',')}` : '/compare';
+    const favoriteSlugs = getItem('favorites', []);
+    const favoriteList = Array.isArray(favoriteSlugs) ? favoriteSlugs : [];
+    const favoritePlugins = favoriteList.map(slug => plugins.find(p => p.slug === slug)).filter(Boolean).slice(0, 6);
+    const presetRaw = getItem('catalogPresets', []);
+    const catalogPresets = Array.isArray(presetRaw) ? presetRaw.slice(0, 6) : [];
 
     const filteredPages = q
       ? pages.filter(p => p.label.toLowerCase().includes(q))
@@ -86,12 +93,46 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
           meta: `Recent · ${p.category}`,
         }));
       }
+
+      if (favoritePlugins.length > 0) {
+        result.push({ type: 'section', label: 'Favorites' });
+        favoritePlugins.forEach(p => result.push({
+          type: 'plugin',
+          label: p.name,
+          path: `/plugin/${p.slug}`,
+          icon: p.icon,
+          meta: `Favorite · ${p.category}`,
+        }));
+      }
+
+      if (catalogPresets.length > 0) {
+        result.push({ type: 'section', label: 'Catalog Presets' });
+        catalogPresets.forEach(preset => {
+          const params = new URLSearchParams();
+          if (preset.search) params.set('q', preset.search);
+          if (preset.category) params.set('category', preset.category);
+          if (preset.tagFilter) params.set('tag', preset.tagFilter);
+          if (preset.showFavoritesOnly) params.set('fav', '1');
+          if (preset.viewMode === 'list') params.set('view', 'list');
+          if (preset.sortKey && preset.sortKey !== 'name') params.set('sort', preset.sortKey);
+          if (preset.sortDir === 'desc') params.set('dir', 'desc');
+          result.push({
+            type: 'page',
+            label: `Preset: ${preset.name}`,
+            path: `/catalog${params.toString() ? `?${params.toString()}` : ''}`,
+            icon: '🧩',
+            meta: 'Apply preset',
+          });
+        });
+      }
     }
 
     const actions = [
       { label: 'Toggle Theme', icon: '🎨', action: 'toggle-theme', meta: `Current: ${themeLabel}` },
       { label: 'Keyboard Shortcuts', icon: '⌨️', action: 'shortcuts', meta: 'Press ?' },
       { label: 'Open Comparison Shortlist', icon: '⚖️', action: 'open-comparison', path: shortlistPath, meta: shortlist.length ? `${shortlist.length} selected` : 'No plugins selected' },
+      { label: 'Clear Recently Viewed', icon: '🧹', action: 'clear-recent', meta: 'Reset recent plugin history' },
+      { label: 'Clear Comparison Shortlist', icon: '🗑️', action: 'clear-shortlist', meta: 'Remove all compare selections' },
     ];
     const filteredActions = q
       ? actions.filter(a => a.label.toLowerCase().includes(q))
@@ -110,14 +151,6 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
       return acc;
     }, []),
   [items]);
-
-  useEffect(() => {
-    if (open) {
-      setQuery('');
-      setActiveIdx(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [open]);
 
   useEffect(() => {
     if (!listRef.current) return;
@@ -140,10 +173,16 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
         return;
       } else if (item.action === 'open-comparison') {
         navigate(item.path || '/compare');
+      } else if (item.action === 'clear-recent') {
+        removeItem('recentViewed');
+        toast.success('Recently viewed cleared');
+      } else if (item.action === 'clear-shortlist') {
+        setCompareShortlist([]);
+        toast.success('Comparison shortlist cleared');
       }
       onClose();
     }
-  }, [navigate, onClose, cycle, onOpenShortcuts]);
+  }, [navigate, onClose, cycle, onOpenShortcuts, toast]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
@@ -179,13 +218,13 @@ export default function CommandPalette({ open, onClose, onOpenShortcuts }) {
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
-            ref={inputRef}
             type="text"
             placeholder="Type a command or search…"
             value={query}
             onChange={e => { setQuery(e.target.value); setActiveIdx(0); }}
             className="command-palette-input"
             aria-label="Command palette search"
+            autoFocus
           />
           <kbd className="command-palette-esc">Esc</kbd>
         </div>

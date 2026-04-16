@@ -5,9 +5,14 @@ import Breadcrumb from '../components/Breadcrumb';
 import { useToast } from '../contexts/ToastContext';
 import { getCompareShortlist, setCompareShortlist } from '../utils/compareShortlist';
 
+function hasDifferences(values) {
+  return values.some(v => v !== values[0]);
+}
+
 export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
+  const diffOnly = searchParams.get('diff') === '1';
 
   const selectedSlugs = useMemo(() => {
     const ids = searchParams.get('plugins');
@@ -23,10 +28,13 @@ export default function Compare() {
     plugins.filter(p => !selectedSlugs.includes(p.slug)),
   [selectedSlugs]);
 
-  const applySelection = (slugs) => {
+  const applySelection = (slugs, nextDiffOnly = diffOnly) => {
     const next = [...new Set(slugs)].slice(0, 4);
     setCompareShortlist(next);
-    setSearchParams(next.length ? { plugins: next.join(',') } : {}, { replace: true });
+    const params = new URLSearchParams();
+    if (next.length) params.set('plugins', next.join(','));
+    if (nextDiffOnly) params.set('diff', '1');
+    setSearchParams(params, { replace: true });
   };
 
   const togglePlugin = (slug) => {
@@ -37,6 +45,13 @@ export default function Compare() {
   };
 
   const clearAll = () => applySelection([]);
+
+  const toggleDiffOnly = () => {
+    const params = new URLSearchParams(searchParams);
+    if (diffOnly) params.delete('diff');
+    else params.set('diff', '1');
+    setSearchParams(params, { replace: true });
+  };
 
   const copyCompareLink = async () => {
     const url = window.location.href;
@@ -54,6 +69,49 @@ export default function Compare() {
     return [...set].sort();
   }, [selected]);
 
+  const categoryValues = selected.map(p => p.category);
+  const versionValues = selected.map(p => p.version);
+  const pricingValues = selected.map(p => p.pricing);
+  const tagValues = selected.map(p => p.tags.join(', '));
+  const visibleFeatures = useMemo(() => {
+    return allFeatures.filter(f => {
+      if (!diffOnly) return true;
+      const presence = selected.map(p => p.features.includes(f));
+      return hasDifferences(presence);
+    });
+  }, [allFeatures, selected, diffOnly]);
+
+  const exportMarkdown = async () => {
+    if (selected.length < 2) return;
+    const header = ['Attribute', ...selected.map(p => p.name)];
+    const rows = [];
+    const pushRow = (label, values) => {
+      if (!diffOnly || hasDifferences(values)) rows.push([label, ...values]);
+    };
+    pushRow('Category', categoryValues);
+    pushRow('Version', versionValues);
+    pushRow('Pricing', pricingValues);
+    visibleFeatures.forEach(f => {
+      rows.push([f, ...selected.map(p => (p.features.includes(f) ? 'Yes' : 'No'))]);
+    });
+    pushRow('Tags', tagValues);
+    const markdown = [
+      `# Plugin Comparison (${selected.length})`,
+      '',
+      `Mode: ${diffOnly ? 'Differences only' : 'Full matrix'}`,
+      '',
+      `| ${header.join(' | ')} |`,
+      `| ${header.map(() => '---').join(' | ')} |`,
+      ...rows.map(r => `| ${r.join(' | ')} |`),
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(markdown);
+      toast.success('Comparison markdown copied');
+    } catch {
+      toast.error('Failed to copy markdown');
+    }
+  };
+
   return (
     <div className="page">
       <Breadcrumb current="Compare Plugins" />
@@ -63,6 +121,10 @@ export default function Compare() {
           <p>Select up to 4 plugins to compare side by side</p>
         </div>
         <div className="compare-actions">
+          <button className={`btn-secondary${diffOnly ? ' compare-diff-active' : ''}`} onClick={toggleDiffOnly}>
+            {diffOnly ? 'Only differences: ON' : 'Only differences: OFF'}
+          </button>
+          <button className="btn-secondary" onClick={exportMarkdown} disabled={selected.length < 2}>Copy Markdown</button>
           <button className="btn-secondary" onClick={copyCompareLink} disabled={selected.length === 0}>Copy Link</button>
           <button className="btn-secondary" onClick={clearAll} disabled={selected.length === 0}>Clear</button>
         </div>
@@ -111,19 +173,25 @@ export default function Compare() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="compare-label">Category</td>
-                {selected.map(p => <td key={p.slug}><span className="badge">{p.category}</span></td>)}
-              </tr>
-              <tr>
-                <td className="compare-label">Version</td>
-                {selected.map(p => <td key={p.slug}><code>{p.version}</code></td>)}
-              </tr>
-              <tr>
-                <td className="compare-label">Pricing</td>
-                {selected.map(p => <td key={p.slug}><span className="badge badge-pricing">{p.pricing}</span></td>)}
-              </tr>
-              {allFeatures.map(f => (
+              {(!diffOnly || hasDifferences(versionValues)) && (
+                <tr>
+                  <td className="compare-label">Version</td>
+                  {selected.map(p => <td key={p.slug}><code>{p.version}</code></td>)}
+                </tr>
+              )}
+              {(!diffOnly || hasDifferences(pricingValues)) && (
+                <tr>
+                  <td className="compare-label">Pricing</td>
+                  {selected.map(p => <td key={p.slug}><span className="badge badge-pricing">{p.pricing}</span></td>)}
+                </tr>
+              )}
+              {(!diffOnly || hasDifferences(categoryValues)) && (
+                <tr>
+                  <td className="compare-label">Category</td>
+                  {selected.map(p => <td key={p.slug}><span className="badge">{p.category}</span></td>)}
+                </tr>
+              )}
+              {visibleFeatures.map(f => (
                 <tr key={f}>
                   <td className="compare-label">{f}</td>
                   {selected.map(p => (
@@ -133,14 +201,16 @@ export default function Compare() {
                   ))}
                 </tr>
               ))}
-              <tr>
-                <td className="compare-label">Tags</td>
-                {selected.map(p => (
-                  <td key={p.slug}>
-                    {p.tags.map(t => <span key={t} className="badge" style={{marginRight: 4}}>{t}</span>)}
-                  </td>
-                ))}
-              </tr>
+              {(!diffOnly || hasDifferences(tagValues)) && (
+                <tr>
+                  <td className="compare-label">Tags</td>
+                  {selected.map(p => (
+                    <td key={p.slug}>
+                      {p.tags.map(t => <span key={t} className="badge" style={{marginRight: 4}}>{t}</span>)}
+                    </td>
+                  ))}
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -160,4 +230,3 @@ export default function Compare() {
     </div>
   );
 }
-

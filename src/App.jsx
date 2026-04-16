@@ -84,9 +84,6 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
 
-  // Close mobile sidebar on navigation
-  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
-
   const toggleCollapse = () => {
     setSidebarCollapsed(prev => {
       const next = !prev;
@@ -132,7 +129,12 @@ export default function App() {
           <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
         )}
 
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={sidebarCollapsed} onToggleCollapse={toggleCollapse} />
+        <Sidebar
+          open={sidebarOpen}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleCollapse}
+          onNavigate={() => setSidebarOpen(false)}
+        />
 
         <div className="main-content">
           <Header user={user} onLogout={handleLogout} onMenuToggle={() => setSidebarOpen(s => !s)} onOpenPalette={() => setPaletteOpen(true)} />
@@ -160,7 +162,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
           <footer className="portal-footer">
-            <span>© 2026 Jakub Jirák · Developer Portal v1.5.0</span>
+            <span>© 2026 Jakub Jirák · Developer Portal v1.6.0</span>
             <span>
               <a href="https://plugins.jetbrains.com/organizations/JakubJirak" target="_blank" rel="noopener noreferrer">
                 JetBrains Marketplace <span className="external-icon" aria-hidden="true">↗</span>
@@ -171,7 +173,9 @@ export default function App() {
 
         <BackToTop />
         <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onOpenShortcuts={() => setShortcutsOpen(true)} />
+        {paletteOpen && (
+          <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onOpenShortcuts={() => setShortcutsOpen(true)} />
+        )}
       </div>
     </ToastProvider>
     </FavoritesProvider>

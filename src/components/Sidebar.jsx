@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { getItem, setItem } from '../utils/storage';
 
 /* SVG icon components — clean, monochrome, Lucide-style */
 const icons = {
@@ -34,7 +33,7 @@ const navItems = [
 const collapseIcon = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>;
 const expandIcon = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>;
 
-export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) {
+export default function Sidebar({ open, onNavigate, collapsed, onToggleCollapse }) {
   const { count: favCount } = useFavorites();
   return (
     <aside className={`sidebar${open ? ' sidebar-open' : ''}${collapsed ? ' sidebar-collapsed' : ''}`}>
@@ -65,6 +64,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }) 
                 end={item.to === '/'}
                 className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
                 title={collapsed ? item.label : undefined}
+                onClick={onNavigate}
               >
                 <span className="sidebar-icon">{item.icon}</span>
                 {!collapsed && <span>{item.label}</span>}

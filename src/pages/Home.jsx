@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import { getTagCloud } from '../utils/tags';
 import { getRecentViewed } from '../utils/recentViewed';
+import { getCompareShortlist } from '../utils/compareShortlist';
+import { useFavorites } from '../contexts/FavoritesContext';
 
 const categoryIcons = {
   'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
@@ -12,28 +14,31 @@ const categoryIcons = {
 
 function DonutChart({ data }) {
   const total = data.reduce((s, d) => s + d.count, 0);
-  let offset = 0;
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
+  const segments = useMemo(() => {
+    return data.map((d, index) => {
+      const pct = total > 0 ? d.count / total : 0;
+      const dash = circumference * pct;
+      const offset = data.slice(0, index).reduce((sum, prev) => {
+        const prevPct = total > 0 ? prev.count / total : 0;
+        return sum + (circumference * prevPct);
+      }, 0);
+      return { ...d, dash, gap: circumference - dash, offset };
+    });
+  }, [data, total, circumference]);
   return (
     <svg viewBox="0 0 100 100" className="donut-chart" aria-hidden="true">
-      {data.map((d, i) => {
-        const pct = d.count / total;
-        const dash = circumference * pct;
-        const gap = circumference - dash;
-        const seg = (
+      {segments.map(d => (
           <circle
             key={d.label}
             cx="50" cy="50" r={radius}
             fill="none" stroke={d.color} strokeWidth="10"
-            strokeDasharray={`${dash} ${gap}`}
-            strokeDashoffset={-offset}
+            strokeDasharray={`${d.dash} ${d.gap}`}
+            strokeDashoffset={-d.offset}
             style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
           />
-        );
-        offset += dash;
-        return seg;
-      })}
+      ))}
       <text x="50" y="48" textAnchor="middle" fill="var(--text-primary)" fontSize="14" fontWeight="700">{total}</text>
       <text x="50" y="60" textAnchor="middle" fill="var(--text-secondary)" fontSize="7">plugins</text>
     </svg>
@@ -41,6 +46,7 @@ function DonutChart({ data }) {
 }
 
 export default function Home() {
+  const { favorites } = useFavorites();
   const freemiumCount = plugins.filter(p => p.pricing === 'freemium').length;
   const paidCount = plugins.length - freemiumCount;
   const freemiumPct = Math.round((freemiumCount / plugins.length) * 100);
@@ -70,6 +76,12 @@ export default function Home() {
   const recentlyViewed = useMemo(() => {
     const slugs = getRecentViewed();
     return slugs.map(slug => plugins.find(p => p.slug === slug)).filter(Boolean).slice(0, 6);
+  }, []);
+  const favoritePlugins = useMemo(() => {
+    return favorites.map(slug => plugins.find(p => p.slug === slug)).filter(Boolean).slice(0, 6);
+  }, [favorites]);
+  const compareShortlist = useMemo(() => {
+    return getCompareShortlist().map(slug => plugins.find(p => p.slug === slug)).filter(Boolean).slice(0, 4);
   }, []);
 
   return (
@@ -159,6 +171,43 @@ export default function Home() {
               style={{ fontSize: `${Math.min(11 + count * 1.5, 18)}px` }}
             >
               {tag} <span className="tag-count">{count}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-header">
+          <h2>Quick Workbench</h2>
+          <Link
+            to={compareShortlist.length ? `/compare?plugins=${compareShortlist.map(p => p.slug).join(',')}` : '/compare'}
+            className="section-link"
+          >
+            Open compare →
+          </Link>
+        </div>
+        <div className="related-grid">
+          {compareShortlist.length > 0 ? compareShortlist.map(p => (
+            <Link to={`/plugin/${p.slug}`} key={`cmp-${p.slug}`} className="related-card">
+              <span className="related-icon">{p.icon}</span>
+              <div>
+                <div className="related-name">{p.name}</div>
+                <div className="related-cat">Compare shortlist</div>
+              </div>
+            </Link>
+          )) : (
+            <div className="empty-state" style={{ width: '100%' }}>
+              <h3>No compare shortlist yet</h3>
+              <p>Add plugins to shortlist from Catalog or Plugin Detail.</p>
+            </div>
+          )}
+          {favoritePlugins.length > 0 && favoritePlugins.map(p => (
+            <Link to={`/plugin/${p.slug}`} key={`fav-${p.slug}`} className="related-card">
+              <span className="related-icon">{p.icon}</span>
+              <div>
+                <div className="related-name">{p.name}</div>
+                <div className="related-cat">Favorite</div>
+              </div>
             </Link>
           ))}
         </div>
