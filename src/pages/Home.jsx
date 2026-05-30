@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import plugins, { categories } from '../data/plugins';
 import { getTagCloud } from '../utils/tags';
@@ -9,6 +9,9 @@ import { compareVersions } from '../utils/versioning';
 import { getHealthThreshold } from '../utils/healthPolicy';
 import { getAlertPolicy } from '../utils/alertsPolicy';
 import { getDismissedAlerts, getPortfolioAlerts, summarizeAlerts } from '../utils/alerts';
+import { getPinnedPlugins, PINNED_UPDATED_EVENT, togglePinnedPlugin } from '../utils/pinnedPlugins';
+import { getActivityLog, ACTIVITY_UPDATED_EVENT, recordActivity } from '../utils/activityLog';
+import { useToast } from '../contexts/ToastContext';
 
 const categoryIcons = {
   'API': '⚡', 'Architecture': '🏗️', 'DevOps': '☸️', 'Documentation': '📄',
@@ -51,6 +54,9 @@ function DonutChart({ data }) {
 
 export default function Home() {
   const { favorites } = useFavorites();
+  const toast = useToast();
+  const [pinnedSlugs, setPinnedSlugs] = useState(() => getPinnedPlugins());
+  const [recentActivity, setRecentActivity] = useState(() => getActivityLog().slice(0, 5));
   const freemiumCount = plugins.filter(p => p.pricing === 'freemium').length;
   const paidCount = plugins.length - freemiumCount;
   const freemiumPct = Math.round((freemiumCount / plugins.length) * 100);
@@ -93,6 +99,30 @@ export default function Home() {
     const allAlerts = getPortfolioAlerts(plugins, healthThreshold, undefined, alertPolicy);
     return summarizeAlerts(allAlerts, getDismissedAlerts());
   }, [healthThreshold, alertPolicy]);
+
+  const pinnedPlugins = useMemo(() => (
+    pinnedSlugs.map(slug => plugins.find(p => p.slug === slug)).filter(Boolean)
+  ), [pinnedSlugs]);
+
+  useEffect(() => {
+    const refreshPinned = () => setPinnedSlugs(getPinnedPlugins());
+    window.addEventListener(PINNED_UPDATED_EVENT, refreshPinned);
+    return () => window.removeEventListener(PINNED_UPDATED_EVENT, refreshPinned);
+  }, []);
+
+  useEffect(() => {
+    const refreshActivity = () => setRecentActivity(getActivityLog().slice(0, 5));
+    window.addEventListener(ACTIVITY_UPDATED_EVENT, refreshActivity);
+    return () => window.removeEventListener(ACTIVITY_UPDATED_EVENT, refreshActivity);
+  }, []);
+
+  const handleUnpin = (slug, name) => {
+    const result = togglePinnedPlugin(slug);
+    if (!result.pinned) {
+      toast.success(`Unpinned "${name}"`);
+      recordActivity({ category: 'pin', message: `Unpinned ${name}`, meta: { slug } });
+    }
+  };
 
   return (
     <div className="page">
@@ -183,6 +213,68 @@ export default function Home() {
             <div className="stat-value">{healthThreshold.toFixed(1)}%</div>
           </Link>
         </div>
+      </div>
+
+      <div className="section">
+        <div className="section-header">
+          <h2>Pinned Plugins</h2>
+          <span className="section-link" style={{ cursor: 'default' }}>
+            {pinnedPlugins.length > 0 ? `${pinnedPlugins.length} pinned` : 'Pin plugins from their detail page'}
+          </span>
+        </div>
+        {pinnedPlugins.length === 0 ? (
+          <div className="empty-state" style={{ padding: '20px' }}>
+            <div className="empty-state-icon">📌</div>
+            <h3>No pinned plugins yet</h3>
+            <p>Use the pin button on plugin cards to keep your go-to plugins on the dashboard and sidebar.</p>
+          </div>
+        ) : (
+          <div className="related-grid">
+            {pinnedPlugins.map(p => (
+              <div key={`pinned-${p.slug}`} className="related-card pinned-card">
+                <Link to={`/plugin/${p.slug}`} className="pinned-card-main">
+                  <span className="related-icon">{p.icon}</span>
+                  <div>
+                    <div className="related-name">{p.name}</div>
+                    <div className="related-cat">{p.category} · v{p.version}</div>
+                  </div>
+                </Link>
+                <button
+                  className="btn-secondary pinned-unpin"
+                  onClick={() => handleUnpin(p.slug, p.name)}
+                  aria-label={`Unpin ${p.name}`}
+                  title="Unpin"
+                >
+                  Unpin
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="section">
+        <div className="section-header">
+          <h2>Recent Activity</h2>
+          <Link to="/activity" className="section-link">Open activity log →</Link>
+        </div>
+        {recentActivity.length === 0 ? (
+          <div className="empty-state" style={{ padding: '20px' }}>
+            <div className="empty-state-icon">🗒️</div>
+            <h3>No recent activity</h3>
+            <p>Actions like pinning, dismissing alerts, or saving presets will appear here.</p>
+          </div>
+        ) : (
+          <ul className="activity-inline-list">
+            {recentActivity.map(entry => (
+              <li key={entry.id} className="activity-inline-item">
+                <span className="activity-inline-cat">{entry.category}</span>
+                <span className="activity-inline-msg">{entry.message}</span>
+                <span className="activity-inline-time">{new Date(entry.timestamp).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="section">

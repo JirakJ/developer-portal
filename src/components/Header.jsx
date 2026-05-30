@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
+import HeaderInbox from './HeaderInbox';
 
 const routeTitles = {
   '/': 'Home',
@@ -10,6 +11,7 @@ const routeTitles = {
   '/releases': 'Releases',
   '/health': 'System Health',
   '/alerts': 'Alerts Center',
+  '/activity': 'Activity Log',
   '/settings': 'Settings',
 };
 
@@ -48,6 +50,7 @@ export default function Header({ user, onLogout, onMenuToggle, onOpenPalette }) 
           <span>Search or jump to…</span>
           <kbd>{shortcutLabel}</kbd>
         </button>
+        <HeaderInbox />
         <ThemeToggle />
         <div className="header-user">
           <div className="header-avatar">

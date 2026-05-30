@@ -3,6 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import plugins from '../data/plugins';
 import FavoriteButton from '../components/FavoriteButton';
 import CompareToggleButton from '../components/CompareToggleButton';
+import PinButton from '../components/PinButton';
 import ShareButton from '../components/ShareButton';
 import { useToast } from '../contexts/ToastContext';
 import { getRelatedPlugins } from '../utils/tags';
@@ -95,6 +96,7 @@ export default function PluginDetail() {
             </div>
           </div>
           <CompareToggleButton slug={plugin.slug} size={20} />
+          <PinButton slug={plugin.slug} size={22} />
           <button className="install-copy-btn" onClick={copyInstallInfo} title="Copy install info" aria-label="Copy install info">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />

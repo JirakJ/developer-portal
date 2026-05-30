@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import FavoriteButton from './FavoriteButton';
 import CompareToggleButton from './CompareToggleButton';
+import PinButton from './PinButton';
 
 export default function PluginCard({ plugin }) {
   return (
@@ -13,6 +14,7 @@ export default function PluginCard({ plugin }) {
         </div>
         <div className="plugin-card-actions">
           <CompareToggleButton slug={plugin.slug} size={16} />
+          <PinButton slug={plugin.slug} size={16} />
           <FavoriteButton slug={plugin.slug} size={16} />
         </div>
       </div>
