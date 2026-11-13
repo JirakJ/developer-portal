@@ -23,6 +23,8 @@ const icons = {
   activity: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
   pin: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.39 4.84L20 8l-4 3.89L17 18l-5-2.63L7 18l1-6.11L4 8l5.61-1.16L12 2z"/></svg>,
 };
+
+const navItems = [
   { section: 'Overview', items: [
     { to: '/', icon: icons.home, label: 'Home' },
     { to: '/catalog', icon: icons.catalog, label: 'Plugin Catalog' },
